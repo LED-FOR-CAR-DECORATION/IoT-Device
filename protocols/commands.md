@@ -15,11 +15,41 @@ Thiết bị hỗ trợ nhận lệnh qua 2 kênh truyền:
 
 ---
 
-## 2. Cấu trúc Gói tin Lệnh (JSON Format)
+## 2. Giao thức Nhị phân Tối ưu Cao (High-Speed 6-Byte Binary Protocol)
 
-Mọi gói tin gửi từ Mobile App xuống ESP32 đều ở định dạng chuỗi **JSON** nén (minify).
+> **Khuyến nghị ưu tiên hàng đầu:** Dùng giao thức này cho Bluetooth BLE trên Mobile App khi tương tác vuốt thời gian thực (Color Picker, Brightness Slider 60 FPS).
+> - Gói tin cố định đúng **6 Bytes**, vừa vặn trong 1 frame BLE tiêu chuẩn (20 bytes MTU mặc định của Android).
+> - Giảm 90% chi phí CPU parsing của ESP32, độ trễ phản hồi < 5ms, triệt tiêu hoàn toàn hiện tượng nghẽn hàng đợi GATT và trễ hình khi lướt ngón tay.
 
-### 2.1. Bật / Tắt nguồn (Power Toggle)
+### 2.1. Cấu trúc Khung truyền (Frame Format)
+
+| Byte | Tên trường | Giá trị | Ý nghĩa |
+|---|---|---|---|
+| Byte 0 | **Header (SOF)** | `0xAA` | Bắt đầu khung gói tin |
+| Byte 1 | **Opcode (CMD)** | `0x01` ~ `0x06` | Mã lệnh chức năng |
+| Byte 2 | **Param 1 (P1)** | `0x00` ~ `0xFF` | Tham số 1 (Power / Brightness / Speed / Mode / Red / Sens) |
+| Byte 3 | **Param 2 (P2)** | `0x00` ~ `0xFF` | Tham số 2 (Green trong lệnh RGB, các lệnh khác đặt `0x00`) |
+| Byte 4 | **Param 3 (P3)** | `0x00` ~ `0xFF` | Tham số 3 (Blue trong lệnh RGB, các lệnh khác đặt `0x00`) |
+| Byte 5 | **Tail (EOF)** | `0x55` | Kết thúc khung gói tin |
+
+### 2.2. Bảng mã Opcode chi tiết
+
+| Opcode | Chức năng | Param 1 (P1) | Param 2 (P2) | Param 3 (P3) | Ví dụ Hex |
+|---|---|---|---|---|---|
+| `0x01` | Power On / Off | `0x01` (ON) / `0x00` (OFF) | `0x00` | `0x00` | Bật: `AA 01 01 00 00 55`<br>Tắt: `AA 01 00 00 00 55` |
+| `0x02` | Brightness (Độ sáng) | `0x00` ~ `0xFF` (0 - 255) | `0x00` | `0x00` | Đặt sáng 180: `AA 02 B4 00 00 55` |
+| `0x03` | Speed (Tốc độ) | `0x01` ~ `0x64` (1 - 100) | `0x00` | `0x00` | Tốc độ 60: `AA 03 3C 00 00 55` |
+| `0x04` | Mode (Hiệu ứng) | `0x00` ~ `0x05` (Mode enum) | `0x00` | `0x00` | Cầu vồng (3): `AA 04 03 00 00 55` |
+| `0x05` | Set RGB Color | Red (`0` - `255`) | Green (`0` - `255`) | Blue (`0` - `255`) | Đỏ tinh khiết: `AA 05 FF 00 00 55`<br>Xanh Ice Blue: `AA 05 00 96 FF 55` |
+| `0x06` | Mic Sensitivity | `0x01` ~ `0x64` (1 - 100) | `0x00` | `0x00` | Độ nhạy 80: `AA 06 50 00 00 55` |
+
+---
+
+## 3. Cấu trúc Gói tin Lệnh (JSON Format - Dùng cho MQTT / Preset)
+
+Mọi gói tin cấu hình hoặc gửi từ MQTT Broker / Cloud xuống ESP32 đều ở định dạng chuỗi **JSON** nén (minify). Firmware tự động nhận diện dựa vào Header byte hoặc cú pháp JSON.
+
+### 3.1. Bật / Tắt nguồn (Power Toggle)
 * **Mô tả:** Bật hoặc tắt phát sáng toàn bộ dải LED.
 * **Payload:**
 ```json

@@ -131,10 +131,21 @@ def start_tcp_listener(strip: VirtualLedStrip, port=8888):
         client, addr = server.accept()
         print(f"\n📱 [App Connected] Điện thoại đã kết nối từ: {addr}")
         def handle_client(c):
-            while True:
                 try:
                     data = c.recv(1024)
                     if not data: break
+                    # Check 6-byte binary frame: [0xAA, CMD, P1, P2, P3, 0x55]
+                    if len(data) == 6 and data[0] == 0xAA and data[5] == 0x55:
+                        opcode, p1, p2, p3 = data[1], data[2], data[3], data[4]
+                        if opcode == 0x01: strip.power = (p1 != 0)
+                        elif opcode == 0x02: strip.brightness = p1
+                        elif opcode == 0x03: strip.speed = p1
+                        elif opcode == 0x04: strip.mode = p1
+                        elif opcode == 0x05: strip.color = [p1, p2, p3]
+                        elif opcode == 0x06: strip.sensitivity = p1
+                        c.send(b'\xAA\x00\x55')
+                        continue
+
                     text = data.decode("utf-8").strip()
                     try:
                         cmd = json.loads(text)
