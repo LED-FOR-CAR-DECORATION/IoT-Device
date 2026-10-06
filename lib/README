@@ -1,0 +1,13 @@
+# Thư mục Thư viện cục bộ (Local Libraries)
+
+Thư mục này dành cho các thư viện private hoặc module phần cứng đặc thù của dự án không có sẵn trên PlatformIO Registry.
+Mỗi thư viện con nên được đặt trong một thư mục riêng:
+
+```
+lib/
+├── CustomSensor/
+│   ├── src/
+│   │   ├── CustomSensor.h
+│   │   └── CustomSensor.cpp
+│   └── library.json
+```
