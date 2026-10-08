@@ -14,7 +14,6 @@ enum class EffectMode : uint8_t {
     BREATHING,
     RAINBOW_WAVE,
     CHASE_FLOW,
-    MUSIC_REACTIVE,
     WELCOME_CAR,
     CUSTOM_PRESET
 };
@@ -37,16 +36,14 @@ struct DeviceSettings {
     EffectMode currentMode;
     RGBColor primaryColor;
     RGBColor secondaryColor;
-    uint8_t micSensitivity;     // 1 - 100
 
     DeviceSettings()
         : powerOn(true),
           brightness(180),
           speed(50),
-          currentMode(EffectMode::RAINBOW_WAVE),
+          currentMode(EffectMode::WELCOME_CAR),
           primaryColor(0, 150, 255),    // Default Ice Blue
-          secondaryColor(255, 0, 120),  // Neon Pink
-          micSensitivity(60) {}
+          secondaryColor(255, 0, 120) {} // Neon Pink
 };
 
 // System connection states

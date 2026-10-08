@@ -13,6 +13,9 @@ StateManager::StateManager() : isDirty(false), lastSaveTime(0) {}
 
 void StateManager::init() {
     loadFromNVS();
+    if (currentSettings.currentMode == EffectMode::RAINBOW_WAVE) {
+        setMode(EffectMode::CUSTOM_PRESET);
+    }
 }
 
 DeviceSettings& StateManager::getSettings() {
@@ -60,13 +63,11 @@ void StateManager::loadFromNVS() {
     currentSettings.powerOn = preferences.getBool("pwr", true);
     currentSettings.brightness = preferences.getUChar("bri", 180);
     currentSettings.speed = preferences.getUChar("spd", 50);
-    currentSettings.currentMode = static_cast<EffectMode>(preferences.getUChar("mode", static_cast<uint8_t>(EffectMode::RAINBOW_WAVE)));
+    currentSettings.currentMode = static_cast<EffectMode>(preferences.getUChar("mode", static_cast<uint8_t>(EffectMode::CUSTOM_PRESET)));
     
     currentSettings.primaryColor.r = preferences.getUChar("cr_r", 0);
     currentSettings.primaryColor.g = preferences.getUChar("cr_g", 150);
     currentSettings.primaryColor.b = preferences.getUChar("cr_b", 255);
-
-    currentSettings.micSensitivity = preferences.getUChar("sens", 60);
     preferences.end();
 
     LOG_I(TAG, "Settings loaded from NVS: Mode=%d, Brightness=%d", 
@@ -85,8 +86,6 @@ void StateManager::saveToNVS() {
     preferences.putUChar("cr_r", currentSettings.primaryColor.r);
     preferences.putUChar("cr_g", currentSettings.primaryColor.g);
     preferences.putUChar("cr_b", currentSettings.primaryColor.b);
-
-    preferences.putUChar("sens", currentSettings.micSensitivity);
     preferences.end();
 
     isDirty = false;

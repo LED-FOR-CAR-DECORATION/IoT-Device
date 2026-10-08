@@ -69,10 +69,10 @@ sequenceDiagram
     BLE-->>App: State = CONNECTED
 
     User->>App: Vuốt đổi màu (Color Wheel Touch Drag)
-    App->>BLE: sendColorThrottled(R, G, B) [Rate Limit 40ms]
-    BLE->>OS: writeCharacteristic(NO_RESPONSE, [0xAA, 0x05, R, G, B, 0x55])
-    OS-->>ESP: Nhận 6-byte frame trong 2-4ms
-    ESP->>ESP: Set Pixel Color tức thì (60 FPS)
+    App->>BLE: sendColorThrottled(R, G, B) [Rate Limit 40ms / ~25 FPS]
+    BLE->>OS: writeCharacteristic(NO_RESPONSE, [0xAA, 0x05, R, G, B, Checksum, 0x55])
+    OS-->>ESP: Nhận 7-byte frame trong Connection Event (15–30ms)
+    ESP->>ESP: Cập nhật màu & LED Render DMA mượt mà
 ```
 
 ---
@@ -84,6 +84,8 @@ sequenceDiagram
 ```kotlin
 package com.carled.app.bluetooth
 
+data class TouchPoint(val x: Int, val y: Int, val r: Int, val g: Int, val b: Int)
+
 object BleProtocolHelper {
     private const val HEADER: Byte = 0xAA.toByte()
     private const val TAIL: Byte = 0x55.toByte()
@@ -94,14 +96,24 @@ object BleProtocolHelper {
     const val CMD_MODE: Byte = 0x04
     const val CMD_COLOR_RGB: Byte = 0x05
     const val CMD_SENSITIVITY: Byte = 0x06
+    const val CMD_DRAW_PIXEL: Byte = 0x13
+    const val CMD_DRAW_BATCH: Byte = 0x14
 
+    /**
+     * Khung chuẩn 7 bytes có XOR Checksum: [0xAA, cmd, p1, p2, p3, checksum, 0x55]
+     */
     fun buildFrame(cmd: Byte, p1: Int = 0, p2: Int = 0, p3: Int = 0): ByteArray {
+        val b1 = (p1 and 0xFF).toByte()
+        val b2 = (p2 and 0xFF).toByte()
+        val b3 = (p3 and 0xFF).toByte()
+        val checksum = (cmd.toInt() xor b1.toInt() xor b2.toInt() xor b3.toInt()).toByte()
         return byteArrayOf(
             HEADER,
             cmd,
-            (p1 and 0xFF).toByte(),
-            (p2 and 0xFF).toByte(),
-            (p3 and 0xFF).toByte(),
+            b1,
+            b2,
+            b3,
+            checksum,
             TAIL
         )
     }
@@ -112,6 +124,34 @@ object BleProtocolHelper {
     fun buildModeFrame(modeIndex: Int) = buildFrame(CMD_MODE, modeIndex)
     fun buildRgbColorFrame(r: Int, g: Int, b: Int) = buildFrame(CMD_COLOR_RGB, r, g, b)
     fun buildSensitivityFrame(sens: Int) = buildFrame(CMD_SENSITIVITY, sens.coerceIn(1, 100))
+
+    /**
+     * Gom nhiều điểm chạm vào một gói Batch Drawing (Opcode 0x14) tránh flood BLE
+     */
+    fun buildBatchDrawFrame(points: List<TouchPoint>): ByteArray {
+        val count = points.size.coerceAtMost(15)
+        val payload = ByteArray(3 + count * 5 + 2)
+        payload[0] = HEADER
+        payload[1] = CMD_DRAW_BATCH
+        payload[2] = count.toByte()
+
+        var csum = (CMD_DRAW_BATCH.toInt() xor count).toByte()
+        for (i in 0 until count) {
+            val pt = points[i]
+            val offset = 3 + i * 5
+            payload[offset] = (pt.x and 0xFF).toByte()
+            payload[offset + 1] = (pt.y and 0xFF).toByte()
+            payload[offset + 2] = (pt.r and 0xFF).toByte()
+            payload[offset + 3] = (pt.g and 0xFF).toByte()
+            payload[offset + 4] = (pt.b and 0xFF).toByte()
+            for (k in 0..4) {
+                csum = (csum.toInt() xor payload[offset + k].toInt()).toByte()
+            }
+        }
+        payload[3 + count * 5] = csum
+        payload[3 + count * 5 + 1] = TAIL
+        return payload
+    }
 }
 ```
 
@@ -242,17 +282,23 @@ class CarLedBleManager(private val context: Context) {
             }
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.i(TAG, "Đã kết nối BLE thành công, bắt đầu khám phá Services...")
+                Log.i(TAG, "Đã kết nối BLE thành công, yêu cầu mở rộng MTU lên 256...")
                 _connectionState.value = ConnectionState.Connecting
-                // Delay nhỏ 100ms trước khi discoverServices là kinh nghiệm vàng trên Android
-                Handler(Looper.getMainLooper()).postDelayed({
-                    gatt.discoverServices()
-                }, 100)
+                // Yêu cầu MTU 256 để gửi JSON và Batch packet không bị phân mảnh
+                gatt.requestMtu(256)
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.w(TAG, "Thiết bị ngắt kết nối.")
                 cleanupGatt()
                 _connectionState.value = ConnectionState.Disconnected
             }
+        }
+
+        override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+            Log.i(TAG, "MTU đã được đàm phán thành công: $mtu bytes (status: $status)")
+            // Sau khi MTU sẵn sàng, bắt đầu khám phá Services
+            Handler(Looper.getMainLooper()).postDelayed({
+                gatt.discoverServices()
+            }, 100)
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
@@ -289,7 +335,7 @@ class CarLedBleManager(private val context: Context) {
     }
 
     /**
-     * Gửi khung nhị phân 6-byte tối ưu có Rate-limiting
+     * Gửi khung nhị phân tối ưu có Rate-limiting (Khuyến nghị 40ms ~ 25 FPS)
      */
     fun sendThrottledCommand(frame: ByteArray, force: Boolean = false) {
         val now = System.currentTimeMillis()
@@ -328,7 +374,9 @@ class CarLedBleManager(private val context: Context) {
 
 ## 5. Tóm tắt Kiểm tra Độ hoàn thiện (Quality Checklist)
 
-- [x] Đã thử nghiệm giải phóng tài nguyên triệt để bằng `disconnect()` + `close()`.
-- [x] Đã áp dụng `WRITE_TYPE_NO_RESPONSE` triệt tiêu độ trễ chờ ACK của BLE.
-- [x] Đã thiết lập Throttling 40ms (~25 FPS) tránh tràn hàng đợi Android GATT.
-- [x] Gói tin cố định đúng 6 bytes nhị phân, tương thích 100% MTU mặc định trên mọi thiết bị Android từ thấp đến cao (Android 8 đến Android 15).
+- [x] Đã giải phóng tài nguyên triệt để bằng `disconnect()` + `close()` chống lỗi GATT 133.
+- [x] Đã chủ động gọi `gatt.requestMtu(256)` tránh phân mảnh gói tin JSON & Batch điểm vẽ.
+- [x] Đã áp dụng `WRITE_TYPE_NO_RESPONSE` để tối ưu thông lượng qua Connection Event.
+- [x] Đã thiết lập Throttling 40ms (~25 FPS) phù hợp vật lý Connection Interval của Bluetooth (15ms - 30ms).
+- [x] Khung nhị phân có trường XOR Checksum bảo vệ tính toàn vẹn dữ liệu ứng dụng.
+- [x] Hỗ trợ gom chùm điểm chạm (Batch Drawing) cho tính năng Live Canvas.

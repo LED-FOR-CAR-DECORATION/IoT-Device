@@ -14,16 +14,12 @@
 #define FIRMWARE_VERSION        "1.0.0"
 #define HARDWARE_REV            "ESP32-V1"
 
-// LED Hardware Specifications
-#define NUM_LEDS_MAIN           120     // Number of LEDs on main strip
-#define LED_COLOR_ORDER         GRB     // WS2812B is usually GRB
-#define MAX_CURRENT_MA          2500    // Max current limit (FastLED power management)
+// Matrix Hardware Specifications
+#define MATRIX_WIDTH            64      // Width in pixels
+#define MATRIX_HEIGHT           32      // Height in pixels
+#define MATRIX_CHAIN            1       // Number of chained panels
 #define DEFAULT_BRIGHTNESS      180     // Default brightness (0-255)
 
-// Audio Sensor Settings
-#define MIC_SAMPLE_WINDOW_MS    25      // Sample window in milliseconds
-#define MIC_NOISE_FLOOR         150     // Base noise offset for ADC
-#define MIC_MAX_AMPLITUDE       2048    // Peak normalization amplitude
 
 // Bluetooth Low Energy (BLE) UUIDs
 #define BLE_SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"

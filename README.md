@@ -7,19 +7,17 @@ Repository chứa mã nguồn Firmware cho hệ thống điều khiển LED tran
 ## 🌟 Tính năng nổi bật
 
 - **Kiến trúc Đa nhân (Dual-Core FreeRTOS):**
-  - **Core 1:** Render hiệu ứng LED mượt mà đạt chuẩn 60 FPS, không bị ảnh hưởng bởi tải mạng.
-  - **Core 0:** Điều phối Bluetooth BLE, Wi-Fi, MQTT, cảm biến micro và nút bấm vật lý.
-- **Hiệu ứng ánh sáng đa dạng (Effects):**
-  - Đơn sắc (Static Colors & Ambient Palettes).
+  - **Core 1:** Render hiệu ứng LED Matrix P5 mượt mà đạt chuẩn 60 FPS (I2S DMA).
+  - **Core 0:** Điều phối Bluetooth BLE, Wi-Fi, MQTT, OTA.
+- **Hiệu ứng ma trận LED đa dạng (Effects):**
+  - Đơn sắc (Static Colors).
   - Nhịp thở (Breathing fade).
   - Sóng cầu vồng chuyển động (Rainbow Wave).
   - Dòng chảy ánh sáng (Chase Flow).
-  - Cảm ứng âm nhạc (Music Reactive Sync qua micro analog/ADC).
 - **Kết nối thông minh:**
-  - **Bluetooth Low Energy (BLE):** Điều khiển trực tiếp từ ứng dụng Smartphone trong cabin mà không cần mạng Internet/Router.
+  - **Bluetooth Low Energy (BLE):** Điều khiển trực tiếp từ ứng dụng Smartphone không cần Router/Internet.
   - **Wi-Fi & MQTT:** Hỗ trợ đồng bộ đám mây và cập nhật phần mềm từ xa qua OTA (Over-The-Air).
-- **Bộ nhớ lưu trạng thái (NVS Storage):** Tự động lưu màu sắc, độ sáng, chế độ khi xe tắt máy (ACC ngắt) và tự phục hồi khi mở khóa xe.
-- **An toàn điện ô tô (Automotive Safety):** Tích hợp thuật toán bảo vệ giới hạn dòng điện tối đa của FastLED, tránh sụt áp nguồn và quá nhiệt dải LED.
+- **Bộ nhớ lưu trạng thái (NVS Storage):** Tự động lưu màu sắc, độ sáng, chế độ hoạt động và tự phục hồi khi khởi động lại.
 
 ---
 
@@ -32,29 +30,25 @@ IoT-Device/
 │       └── build.yml               # Tự động hóa CI Build trên GitHub Actions
 ├── docs/                           # Tài liệu thiết kế & kỹ thuật
 │   ├── architecture.md             # Sơ đồ kiến trúc phần mềm & FreeRTOS
-│   ├── hardware_schematic.md       # Sơ đồ đấu nối mạch điện ô tô 12V -> 5V
+│   ├── hardware_schematic.md       # Sơ đồ kết nối phần cứng HUB75
 │   └── api_protocol.md             # Giao thức BLE GATT & định dạng JSON
 ├── include/                        # File cấu hình & Headers dùng chung
-│   ├── config.h                    # Hằng số cấu hình hệ thống (số LED, BLE UUID,...)
-│   ├── pin_definitions.h          # Định nghĩa chân GPIO của vi điều khiển ESP32
+│   ├── config.h                    # Hằng số cấu hình hệ thống (Matrix 64x32, BLE UUID,...)
+│   ├── pin_definitions.h          # Định nghĩa chân kết nối HUB75 DMA của ESP32
 │   ├── secrets.example.h           # File mẫu chứa thông tin nhạy cảm (WiFi, MQTT)
 │   └── types.h                     # Enums và Data Structs (RGBColor, EffectMode,...)
 ├── src/                            # Mã nguồn chính (Source Code)
 │   ├── core/                       # Lõi hệ thống & quản lý trạng thái
-│   │   ├── StateManager.h/.cpp     # Đọc/ghi cấu hình vào bộ nhớ NVS Flash
-│   │   └── PowerManager.h/.cpp     # Quản lý nguồn ACC và tín hiệu cửa xe
+│   │   └── StateManager.h/.cpp     # Đọc/ghi cấu hình vào bộ nhớ NVS Flash
 │   ├── drivers/                    # Trình điều khiển phần cứng ngoại vi
-│   │   ├── LedDriver.h/.cpp        # Driver điều khiển LED dải WS2812B (FastLED)
-│   │   ├── AudioSensor.h/.cpp      # Driver đọc cảm biến âm thanh (ADC)
-│   │   └── ButtonDriver.h/.cpp     # Driver nút bấm chuyển chế độ chống rung (Debounce)
+│   │   └── LedDriver.h/.cpp        # Driver điều khiển LED Matrix P5 (HUB75 I2S DMA)
 │   ├── effects/                    # Module các thuật toán hiệu ứng chiếu sáng
 │   │   ├── IEffect.h               # Interface chuẩn cho các hiệu ứng
 │   │   ├── EffectManager.h/.cpp    # Quản lý chuyển đổi và render hiệu ứng
 │   │   ├── StaticColorEffect.h/.cpp# Hiệu ứng màu tĩnh
 │   │   ├── BreathingEffect.h/.cpp  # Hiệu ứng nhịp thở
 │   │   ├── RainbowEffect.h/.cpp    # Hiệu ứng cầu vồng
-│   │   ├── ChaseEffect.h/.cpp      # Hiệu ứng đuổi màu
-│   │   └── MusicSyncEffect.h/.cpp  # Hiệu ứng nhảy theo nhạc xe
+│   │   └── ChaseEffect.h/.cpp      # Hiệu ứng đuổi màu
 │   ├── network/                    # Giao tiếp mạng & kết nối
 │   │   ├── BleManager.h/.cpp       # GATT Server Bluetooth Low Energy
 │   │   ├── WifiManager.h/.cpp      # Quản lý kết nối Wi-Fi & Reconnect

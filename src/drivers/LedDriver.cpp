@@ -1,65 +1,102 @@
 #include "LedDriver.h"
 #include "utils/Logger.h"
 
-#define TAG "LED"
+#define TAG "HUB75"
 
 LedDriver& LedDriver::getInstance() {
     static LedDriver instance;
     return instance;
 }
 
-LedDriver::LedDriver() : currentBrightness(DEFAULT_BRIGHTNESS) {}
+LedDriver::LedDriver() 
+    : dmaDisplay(nullptr), currentBrightness(DEFAULT_BRIGHTNESS) {}
 
 void LedDriver::init() {
-    FastLED.addLeds<WS2812B, PIN_LED_DATA_MAIN, LED_COLOR_ORDER>(leds, NUM_LEDS_MAIN)
-           .setCorrection(TypicalLEDStrip);
+    HUB75_I2S_CFG::i2s_pins _pins = {
+        PIN_HUB75_R1, PIN_HUB75_G1, PIN_HUB75_B1,
+        PIN_HUB75_R2, PIN_HUB75_G2, PIN_HUB75_B2,
+        PIN_HUB75_A,  PIN_HUB75_B,  PIN_HUB75_C,  PIN_HUB75_D,  PIN_HUB75_E,
+        PIN_HUB75_LAT, PIN_HUB75_OE, PIN_HUB75_CLK
+    };
 
-    // FastLED current / power limiter for automotive safety
-    FastLED.setMaxPowerInVoltsAndMilliamps(5, MAX_CURRENT_MA);
-    FastLED.setBrightness(currentBrightness);
-    FastLED.clear(true);
+    HUB75_I2S_CFG mxconfig(
+        MATRIX_WIDTH,   // 64
+        MATRIX_HEIGHT,  // 32
+        MATRIX_CHAIN,   // 1
+        _pins
+    );
 
-    LOG_I(TAG, "LED Driver initialized: %d LEDs on GPIO %d, Max %dmA", 
-          NUM_LEDS_MAIN, PIN_LED_DATA_MAIN, MAX_CURRENT_MA);
+    // Optimize DMA double-buffering & color depth for car display
+    mxconfig.double_buff = false;
+    mxconfig.clkphase = false;
+    mxconfig.driver = HUB75_I2S_CFG::SHIFTREG;
+
+    dmaDisplay = new MatrixPanel_I2S_DMA(mxconfig);
+    if (!dmaDisplay->begin()) {
+        LOG_E(TAG, "****** HUB75 DMA Matrix Initialization FAILED! ******");
+        return;
+    }
+
+    dmaDisplay->setBrightness8(currentBrightness);
+    dmaDisplay->clearScreen();
+
+    LOG_I(TAG, "HUB75 DMA Matrix %dx%d Initialized successfully!", MATRIX_WIDTH, MATRIX_HEIGHT);
 }
 
 void LedDriver::setBrightness(uint8_t brightness) {
     currentBrightness = brightness;
-    FastLED.setBrightness(brightness);
+    if (dmaDisplay) {
+        dmaDisplay->setBrightness8(brightness);
+    }
 }
 
 void LedDriver::clear() {
-    FastLED.clear();
+    if (dmaDisplay) {
+        dmaDisplay->clearScreen();
+    }
 }
 
 void LedDriver::show() {
-    FastLED.show();
+    // DMA continuously pushes frames automatically via I2S
 }
 
-void LedDriver::setPixel(uint16_t index, const CRGB& color) {
-    if (index < NUM_LEDS_MAIN) {
-        leds[index] = color;
+void LedDriver::drawPixel(int16_t x, int16_t y, uint8_t r, uint8_t g, uint8_t b) {
+    if (dmaDisplay && x >= 0 && x < MATRIX_WIDTH && y >= 0 && y < MATRIX_HEIGHT) {
+        dmaDisplay->drawPixelRGB888(x, y, r, g, b);
     }
 }
 
-void LedDriver::setPixel(uint16_t index, uint8_t r, uint8_t g, uint8_t b) {
-    if (index < NUM_LEDS_MAIN) {
-        leds[index] = CRGB(r, g, b);
+void LedDriver::drawPixel(int16_t x, int16_t y, uint16_t color565) {
+    if (dmaDisplay && x >= 0 && x < MATRIX_WIDTH && y >= 0 && y < MATRIX_HEIGHT) {
+        dmaDisplay->drawPixel(x, y, color565);
     }
-}
-
-void LedDriver::fill(const CRGB& color) {
-    fill_solid(leds, NUM_LEDS_MAIN, color);
 }
 
 void LedDriver::fill(uint8_t r, uint8_t g, uint8_t b) {
-    fill_solid(leds, NUM_LEDS_MAIN, CRGB(r, g, b));
+    if (dmaDisplay) {
+        dmaDisplay->fillScreenRGB888(r, g, b);
+    }
 }
 
-CRGB* LedDriver::getLeds() {
-    return leds;
+void LedDriver::fill(uint16_t color565) {
+    if (dmaDisplay) {
+        dmaDisplay->fillScreen(color565);
+    }
 }
 
-uint16_t LedDriver::getNumLeds() const {
-    return NUM_LEDS_MAIN;
+void LedDriver::drawText(int16_t x, int16_t y, const String& text, uint16_t color565, uint8_t textSize) {
+    if (!dmaDisplay) return;
+    dmaDisplay->setTextSize(textSize);
+    dmaDisplay->setTextColor(color565);
+    dmaDisplay->setCursor(x, y);
+    dmaDisplay->print(text);
+}
+
+void LedDriver::drawBitmap(int16_t x, int16_t y, const uint16_t* bitmap, int16_t w, int16_t h) {
+    if (!dmaDisplay || !bitmap) return;
+    dmaDisplay->drawRGBBitmap(x, y, bitmap, w, h);
+}
+
+uint16_t LedDriver::color565(uint8_t r, uint8_t g, uint8_t b) {
+    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }

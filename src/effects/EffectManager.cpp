@@ -11,14 +11,14 @@ EffectManager& EffectManager::getInstance() {
 }
 
 EffectManager::EffectManager() 
-    : activeEffect(&rainbowEffect), lastFrameTime(0) {}
+    : activeEffect(&customEffect), lastFrameTime(0) {}
 
 void EffectManager::init() {
     staticEffect.init();
     breathingEffect.init();
     rainbowEffect.init();
     chaseEffect.init();
-    musicEffect.init();
+    customEffect.init();
 
     setMode(StateManager::getInstance().getSettings().currentMode);
     LOG_I(TAG, "Effect Manager initialized");
@@ -38,11 +38,12 @@ void EffectManager::setMode(EffectMode mode) {
         case EffectMode::CHASE_FLOW:
             activeEffect = &chaseEffect;
             break;
-        case EffectMode::MUSIC_REACTIVE:
-            activeEffect = &musicEffect;
+        case EffectMode::WELCOME_CAR:
+        case EffectMode::CUSTOM_PRESET:
+            activeEffect = &customEffect;
             break;
         default:
-            activeEffect = &staticEffect;
+            activeEffect = &customEffect;
             break;
     }
 
@@ -55,7 +56,7 @@ void EffectManager::setMode(EffectMode mode) {
 void EffectManager::nextMode() {
     uint8_t modeInt = static_cast<uint8_t>(StateManager::getInstance().getSettings().currentMode);
     modeInt++;
-    if (modeInt > static_cast<uint8_t>(EffectMode::MUSIC_REACTIVE)) {
+    if (modeInt > static_cast<uint8_t>(EffectMode::CUSTOM_PRESET)) {
         modeInt = static_cast<uint8_t>(EffectMode::STATIC_COLOR);
     }
 

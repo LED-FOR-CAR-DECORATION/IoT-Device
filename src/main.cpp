@@ -2,10 +2,8 @@
 #include "config.h"
 #include "utils/Logger.h"
 #include "core/StateManager.h"
-#include "core/PowerManager.h"
+#include "storage/StorageManager.h"
 #include "drivers/LedDriver.h"
-#include "drivers/AudioSensor.h"
-#include "drivers/ButtonDriver.h"
 #include "effects/EffectManager.h"
 #include "network/BleManager.h"
 #include "network/WifiManager.h"
@@ -37,29 +35,16 @@ void setup() {
     // 2. Initialize State / Flash Storage
     StateManager::getInstance().init();
 
-    // 3. Initialize Hardware Drivers
+    // 3. Initialize File System Storage (SPIFFS for Character Projections - Flow 2)
+    StorageManager::getInstance().init();
+
+    // 4. Initialize Hardware Drivers (LED Matrix HUB75)
     LedDriver::getInstance().init();
-    AudioSensor::getInstance().init();
-    ButtonDriver::getInstance().init();
-    PowerManager::getInstance().init();
 
-    // Button click triggers next lighting effect mode
-    ButtonDriver::getInstance().onClick([]() {
-        LOG_I(TAG, "Button clicked: switching to next mode");
-        EffectManager::getInstance().nextMode();
-    });
-
-    // Button long press toggles power on/off
-    ButtonDriver::getInstance().onLongPress([]() {
-        bool currentPwr = StateManager::getInstance().getSettings().powerOn;
-        LOG_I(TAG, "Button long pressed: toggling power -> %s", !currentPwr ? "ON" : "OFF");
-        StateManager::getInstance().setPower(!currentPwr);
-    });
-
-    // 4. Initialize Effects
+    // 5. Initialize Effects
     EffectManager::getInstance().init();
 
-    // 5. Initialize Connectivity (BLE is primary for car ambient lighting)
+    // 5. Initialize Connectivity (BLE, WiFi, MQTT, OTA)
     BleManager::getInstance().init();
     WifiManager::getInstance().init();
     MqttManager::getInstance().init();
@@ -81,8 +66,6 @@ void setup() {
 
 void loop() {
     // Background polling on Core 0
-    ButtonDriver::getInstance().update();
-    PowerManager::getInstance().update();
     BleManager::getInstance().update();
     WifiManager::getInstance().update();
     MqttManager::getInstance().update();

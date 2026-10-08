@@ -48,6 +48,9 @@ Tài liệu đặc tả giao thức giao tiếp giữa ứng dụng Mobile (Flut
 * `3`: RAINBOW_WAVE (Cầu vồng chuyển động)
 * `4`: CHASE_FLOW (Dòng chảy đuổi màu)
 * `5`: MUSIC_REACTIVE (Nháy theo nhịp điệu nhạc xe)
+* `6`: CUSTOM_PRESET (Ảnh/Animation Character chiếu từ Flash SPIFFS)
+
+> **Lưu ý hiệu năng:** Với các thao tác vuốt thời gian thực (Slider độ sáng, Color Wheel), khuyến nghị ưu tiên dùng **Giao thức Nhị phân 7-byte có Checksum** quy định tại [protocols/commands.md](file:///d:/SEP/IoT-Device/protocols/commands.md). Giao thức JSON dùng cho cấu hình và MQTT.
 
 ### Đổi màu sắc (RGB Color Picker)
 ```json

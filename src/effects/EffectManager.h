@@ -5,7 +5,7 @@
 #include "BreathingEffect.h"
 #include "RainbowEffect.h"
 #include "ChaseEffect.h"
-#include "MusicSyncEffect.h"
+#include "CustomProjectionEffect.h"
 #include <vector>
 #include <memory>
 
@@ -18,6 +18,7 @@ public:
     void setMode(EffectMode mode);
     void nextMode();
     IEffect* getCurrentEffect();
+    CustomProjectionEffect& getCustomEffect() { return customEffect; }
 
 private:
     EffectManager();
@@ -28,7 +29,7 @@ private:
     BreathingEffect breathingEffect;
     RainbowEffect rainbowEffect;
     ChaseEffect chaseEffect;
-    MusicSyncEffect musicEffect;
+    CustomProjectionEffect customEffect;
 
     unsigned long lastFrameTime;
 };

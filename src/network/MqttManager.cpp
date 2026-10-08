@@ -6,6 +6,7 @@
 #include "config.h"
 #include "core/StateManager.h"
 #include "effects/EffectManager.h"
+#include "storage/StorageManager.h"
 #include "utils/Logger.h"
 #include <ArduinoJson.h>
 
@@ -91,5 +92,17 @@ void MqttManager::callback(char* topic, byte* payload, unsigned int length) {
         uint8_t g = doc["color"]["g"] | 255;
         uint8_t b = doc["color"]["b"] | 255;
         state.setPrimaryColor(r, g, b);
+    }
+
+    if (doc["command"].is<const char*>()) {
+        const char* cmd = doc["command"].as<const char*>();
+        if (strcmp(cmd, "reload_projection") == 0) {
+            EffectManager::getInstance().getCustomEffect().loadFromFlash();
+            state.setMode(EffectMode::CUSTOM_PRESET);
+            EffectManager::getInstance().setMode(EffectMode::CUSTOM_PRESET);
+        } else if (strcmp(cmd, "clear_projection") == 0) {
+            StorageManager::getInstance().deletePattern();
+            EffectManager::getInstance().getCustomEffect().clearFrames();
+        }
     }
 }
