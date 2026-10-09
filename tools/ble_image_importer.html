@@ -459,6 +459,7 @@
       <button class="tab-btn active" onclick="switchTab('tab-import')">🖼️ Chiếu Ảnh</button>
       <button class="tab-btn" onclick="switchTab('tab-controls')">🎛️ Bảng Đèn</button>
       <button class="tab-btn" onclick="switchTab('tab-canvas')">🎨 Bút Vẽ Live</button>
+      <button class="tab-btn" onclick="switchTab('tab-text')">📝 Chạy Chữ</button>
       <button class="tab-btn" onclick="switchTab('tab-wifi')">📶 Wi-Fi</button>
       <button class="tab-btn" onclick="switchTab('tab-logs')">📋 Nhật Ký</button>
     </div>
@@ -564,6 +565,7 @@
         <h2><span>✨ Chuyển Đổi Hiệu Ứng (Mode Switcher)</span></h2>
         <div class="grid-modes">
           <button class="mode-btn active" onclick="setModeBle(6)">🏎️ Xe Đua Mascot (Custom)</button>
+          <button class="mode-btn" onclick="switchTab('tab-canvas')">⬛ Bảng Đen Vẽ Live</button>
           <button class="mode-btn" onclick="setModeBle(3)">🌈 Sóng Cầu Vồng</button>
           <button class="mode-btn" onclick="setModeBle(4)">🌊 Dòng Chảy Đuổi</button>
           <button class="mode-btn" onclick="setModeBle(2)">🫁 Nhịp Thở Đổi Màu</button>
@@ -577,8 +579,8 @@
     <div class="tab-pane" id="tab-canvas">
       <div class="card">
         <h2>
-          <span>🎨 Bút Vẽ Trực Tiếp Lên Màn LED</span>
-          <button class="btn-sm btn-outline" onclick="clearLiveCanvas()">🧹 Xóa Bảng</button>
+          <span>🎨 Bút Vẽ Trực Tiếp (Bảng Đen)</span>
+          <button class="btn-sm btn-danger" onclick="clearLiveCanvas()">⬛ Hiện Bảng Đen / Xóa</button>
         </h2>
         <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
           Dùng ngón tay chạm hoặc vẽ lên ô lưới 64x32. Nét vẽ sẽ xuất hiện <b>tức thì</b> lên bảng LED HUB75 qua gói
@@ -599,6 +601,88 @@
           <div class="color-chip" style="background:#000000; border-color:#555;" onclick="setDrawColor(0, 0, 0, this)"
             title="Tẩy xóa"></div>
         </div>
+      </div>
+    </div>
+
+    <!-- ================= TAB: BẢNG CHẠY CHỮ (MARQUEE) ================= -->
+    <div class="tab-pane" id="tab-text">
+      <div class="card">
+        <h2><span>📝 Bảng Chạy Chữ & Thông Điệp Lái Xe</span></h2>
+        
+        <!-- Live Preview Canvas -->
+        <div class="preview-wrap" style="margin-bottom:12px;">
+          <canvas id="textPreviewCanvas" width="64" height="32" style="background:#05070e; border:1px solid var(--accent); border-radius:8px; width:100%; max-width:320px; aspect-ratio:2/1; image-rendering:pixelated;"></canvas>
+        </div>
+
+        <!-- Quick Presets -->
+        <div style="margin-bottom: 12px;">
+          <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:6px;">Mẫu câu thông dụng trên xe hơi:</label>
+          <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            <button class="btn-sm btn-outline" type="button" onclick="applyPresetText('XIN CAM ON!')">🚗 Cảm Ơn</button>
+            <button class="btn-sm btn-outline" type="button" onclick="applyPresetText('XE TAP LAI - XIN THONG CAM')">⚠️ Tập Lái</button>
+            <button class="btn-sm btn-outline" type="button" onclick="applyPresetText('GIU KHOANG CACH AN TOAN')">🛑 Giữ Khoảng Cách</button>
+            <button class="btn-sm btn-outline" type="button" onclick="applyPresetText('XIN NHUONG DUONG')">👋 Nhường Đường</button>
+            <button class="btn-sm btn-outline" type="button" onclick="applyPresetText('LH: 0988 123 456')">📞 Để Lại SĐT</button>
+            <button class="btn-sm btn-outline" type="button" onclick="applyPresetText('CHUC VAN DAM BINH AN!')">🎉 Bình An</button>
+          </div>
+        </div>
+
+        <!-- Text Input -->
+        <div class="input-group">
+          <label>Nội dung hiển thị (Hỗ trợ tiếng Việt tự động lọc dấu)</label>
+          <input type="text" id="marqueeTextInput" placeholder="Nhập chữ cần chạy..." value="XIN CAM ON!">
+        </div>
+
+        <!-- Grid Options: Size & Mode -->
+        <div class="grid-2">
+          <div class="input-group">
+            <label>Cỡ Chữ (Font Size)</label>
+            <select id="marqueeFontSize">
+              <option value="1">Cỡ 1 - Tiêu chuẩn (5x7px)</option>
+              <option value="2" selected>Cỡ 2 - Lớn & Rõ nét (10x14px)</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Kiểu Hiệu Ứng</label>
+            <select id="marqueeMode">
+              <option value="scroll_left" selected>Cuộn từ phải sang trái</option>
+              <option value="static">Chữ tĩnh (Giữa bảng)</option>
+              <option value="blink">Nhấp nháy (Blink)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Color & Rainbow -->
+        <div style="margin-top:8px;">
+          <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:6px;">Màu sắc chữ:</label>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <input type="color" id="marqueeColorPicker" value="#ffd700" style="width:40px; height:34px; border:none; border-radius:6px; cursor:pointer; background:none;">
+            <div class="color-chips" style="margin:0;">
+              <div class="color-chip active" style="background:#ffd700;" onclick="setMarqueeColor('#ffd700', this)" title="Vàng Gold"></div>
+              <div class="color-chip" style="background:#ff3366;" onclick="setMarqueeColor('#ff3366', this)" title="Đỏ Neon"></div>
+              <div class="color-chip" style="background:#00d2ff;" onclick="setMarqueeColor('#00d2ff', this)" title="Ice Blue"></div>
+              <div class="color-chip" style="background:#00f076;" onclick="setMarqueeColor('#00f076', this)" title="Xanh Lục"></div>
+              <div class="color-chip" style="background:#ffffff;" onclick="setMarqueeColor('#ffffff', this)" title="Trắng"></div>
+            </div>
+            <label style="display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer; margin-left:auto;">
+              <input type="checkbox" id="marqueeRainbow"> 🌈 Chữ 7 màu (Rainbow)
+            </label>
+          </div>
+        </div>
+
+        <!-- Slider Speed -->
+        <div class="slider-group" style="margin-top:12px;">
+          <label><span>Tốc Độ Cuộn</span><span id="marqueeSpeedVal">60</span></label>
+          <input type="range" id="marqueeSpeedSlider" min="10" max="100" value="60">
+        </div>
+
+        <!-- Send Buttons -->
+        <div style="display:flex; gap:8px; margin-top:14px;">
+          <button class="btn" id="btnSendMarqueeBle" style="flex:2;" disabled>🚀 Bắn Chữ Lên Bảng LED (BLE)</button>
+          <button class="btn btn-outline" id="btnStopMarqueeBle" style="flex:1;" disabled>⏹️ Tắt Chữ</button>
+        </div>
+
+        <div class="status-toast" id="marqueeToast"></div>
       </div>
     </div>
 
@@ -653,12 +737,13 @@
     function switchTab(tabId) {
       document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      if (window.event && window.event.target) {
-        window.event.target.classList.add('active');
-      }
+      const pane = document.getElementById(tabId);
+      if (pane) pane.classList.add('active');
 
-      // Tự động chuyển bảng LED về màn hình đen khi mở Tab Bút Vẽ
+      const btn = document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+      if (btn) btn.classList.add('active');
+
+      // Tự động chuyển bảng LED về màn hình đen ngay khi mở Tab Bút Vẽ
       if (tabId === 'tab-canvas') {
         clearLiveCanvas();
       }
@@ -733,6 +818,13 @@
         document.getElementById('btnDisconnectBle').style.display = 'inline-block';
         document.getElementById('btnUploadBle').disabled = false;
         document.getElementById('btnSendWifiBle').disabled = false;
+        document.getElementById('btnSendMarqueeBle').disabled = false;
+        document.getElementById('btnStopMarqueeBle').disabled = false;
+
+        // Nếu người dùng đang mở sẵn Tab Bút Vẽ, tự động chuyển LED sang bảng đen ngay
+        if (document.getElementById('tab-canvas').classList.contains('active')) {
+          clearLiveCanvas();
+        }
 
         log('🎉 KẾT NỐI BLUETOOTH THÀNH CÔNG!');
       } catch (err) {
@@ -753,6 +845,8 @@
       document.getElementById('btnDisconnectBle').style.display = 'none';
       document.getElementById('btnUploadBle').disabled = true;
       document.getElementById('btnSendWifiBle').disabled = true;
+      document.getElementById('btnSendMarqueeBle').disabled = true;
+      document.getElementById('btnStopMarqueeBle').disabled = true;
       writeCharacteristic = null;
       statusCharacteristic = null;
       log('Thiết bị Bluetooth đã ngắt kết nối.');
@@ -1022,15 +1116,20 @@
       if (el) el.classList.add('active');
     }
 
-    function clearLiveCanvas() {
+    async function clearLiveCanvas() {
       lCtx.fillStyle = '#000';
       lCtx.fillRect(0, 0, 64, 32);
       strokeBuffer = [];
       if (writeCharacteristic) {
-        sendThrottledBle(buildFrame(0x15, 0, 0, 0), true);
-        log('🎨 Đã chuyển bảng LED về màn hình đen tuyền (Opcode 0x15).');
+        const frame = buildFrame(0x15, 0, 0, 0);
+        try {
+          await writeCharacteristic.writeValueWithoutResponse(frame);
+          log('🎨 Đã chuyển bảng LED về màn hình đen tuyền (Opcode 0x15).');
+        } catch (e) {
+          console.error('Lỗi gửi lệnh 0x15:', e);
+        }
       } else {
-        log('Đã xóa bảng vẽ về đen.');
+        log('Đã xóa bảng vẽ về đen (chưa kết nối BLE).');
       }
     }
 
@@ -1097,6 +1196,177 @@
         alert('Đã gửi thông tin Wi-Fi. ESP32 đang kết nối vào: ' + ssid + '...');
       } catch (err) {
         alert('Lỗi gửi Wi-Fi qua BLE: ' + err.message);
+      }
+    });
+
+    // --- TAB: MARQUEE TEXT RUNNER & LIVE PREVIEW ---
+    let marqueeSelectedColor = { r: 255, g: 215, b: 0 };
+    let previewCursorX = 64;
+    let previewLastStep = performance.now();
+    let previewRainbowHue = 0;
+
+    function removeVietnameseTones(str) {
+      str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+      str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+      str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+      str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+      str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+      str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+      str = str.replace(/đ/g, "d");
+      str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+      str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+      str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+      str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+      str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+      str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+      str = str.replace(/Đ/g, "D");
+      return str;
+    }
+
+    function hexToRgb(hex) {
+      const val = parseInt(hex.replace('#', ''), 16);
+      return { r: (val >> 16) & 255, g: (val >> 8) & 255, b: val & 255 };
+    }
+
+    function setMarqueeColor(hex, el) {
+      document.getElementById('marqueeColorPicker').value = hex;
+      marqueeSelectedColor = hexToRgb(hex);
+      if (el) {
+        el.parentElement.querySelectorAll('.color-chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+      }
+    }
+
+    document.getElementById('marqueeColorPicker').addEventListener('input', (e) => {
+      marqueeSelectedColor = hexToRgb(e.target.value);
+    });
+
+    document.getElementById('marqueeSpeedSlider').addEventListener('input', (e) => {
+      document.getElementById('marqueeSpeedVal').innerText = e.target.value;
+    });
+
+    function applyPresetText(txt) {
+      document.getElementById('marqueeTextInput').value = txt;
+      previewCursorX = 64;
+    }
+
+    // Canvas Simulation Animation Loop
+    const textPreviewCanvas = document.getElementById('textPreviewCanvas');
+    const textPreviewCtx = textPreviewCanvas.getContext('2d');
+
+    function renderMarqueePreview() {
+      const inputVal = document.getElementById('marqueeTextInput').value || 'CAR LED';
+      const text = removeVietnameseTones(inputVal);
+      const size = parseInt(document.getElementById('marqueeFontSize').value);
+      const mode = document.getElementById('marqueeMode').value;
+      const speed = parseInt(document.getElementById('marqueeSpeedSlider').value);
+      const isRainbow = document.getElementById('marqueeRainbow').checked;
+      const now = performance.now();
+
+      const stepDelay = Math.max(15, 85 - Math.floor(speed * 0.7));
+      const charWidth = size === 2 ? 12 : 6;
+      const totalWidth = text.length * charWidth;
+
+      if (mode === 'scroll_left') {
+        if (now - previewLastStep >= stepDelay) {
+          previewLastStep = now;
+          previewCursorX--;
+          if (previewCursorX < -totalWidth) {
+            previewCursorX = 64;
+          }
+        }
+      } else {
+        previewCursorX = Math.floor((64 - totalWidth) / 2);
+      }
+
+      // Clear background
+      textPreviewCtx.fillStyle = '#05070e';
+      textPreviewCtx.fillRect(0, 0, 64, 32);
+
+      const y = (size === 2) ? 9 : 12;
+      const fontPx = size === 2 ? 13 : 8;
+      textPreviewCtx.font = `bold ${fontPx}px monospace`;
+      textPreviewCtx.textBaseline = 'top';
+
+      const shouldDraw = (mode !== 'blink') || (Math.floor(now / 400) % 2 === 0);
+
+      if (shouldDraw) {
+        if (isRainbow) {
+          previewRainbowHue = (previewRainbowHue + 1) % 360;
+          for (let i = 0; i < text.length; i++) {
+            const cx = previewCursorX + i * charWidth;
+            if (cx > -charWidth && cx < 64) {
+              const hue = (previewRainbowHue + i * 25) % 360;
+              textPreviewCtx.fillStyle = `hsl(${hue}, 100%, 55%)`;
+              textPreviewCtx.fillText(text[i], cx, y);
+            }
+          }
+        } else {
+          textPreviewCtx.fillStyle = `rgb(${marqueeSelectedColor.r}, ${marqueeSelectedColor.g}, ${marqueeSelectedColor.b})`;
+          textPreviewCtx.fillText(text, previewCursorX, y);
+        }
+      }
+
+      requestAnimationFrame(renderMarqueePreview);
+    }
+    requestAnimationFrame(renderMarqueePreview);
+
+    // BLE Send Marquee Text (JSON)
+    document.getElementById('btnSendMarqueeBle').addEventListener('click', async () => {
+      if (!writeCharacteristic) return alert('Chưa kết nối Bluetooth!');
+
+      const rawText = document.getElementById('marqueeTextInput').value.trim() || 'CAR LED';
+      const normText = removeVietnameseTones(rawText);
+      const size = parseInt(document.getElementById('marqueeFontSize').value);
+      const mode = document.getElementById('marqueeMode').value;
+      const speed = parseInt(document.getElementById('marqueeSpeedSlider').value);
+      const isRainbow = document.getElementById('marqueeRainbow').checked;
+
+      const payload = JSON.stringify({
+        type: "marquee",
+        text: normText,
+        color: { r: marqueeSelectedColor.r, g: marqueeSelectedColor.g, b: marqueeSelectedColor.b },
+        speed: speed,
+        size: size,
+        mode: mode,
+        rainbow: isRainbow,
+        y_pos: -1
+      }) + '\n';
+
+      const toast = document.getElementById('marqueeToast');
+      try {
+        log('Gửi lệnh Chạy Chữ: ' + payload.trim());
+        const encoder = new TextEncoder();
+        const bytes = encoder.encode(payload);
+
+        // MTU Chunking send
+        const chunkSize = 180;
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+          const chunk = bytes.slice(i, i + chunkSize);
+          await writeCharacteristic.writeValueWithoutResponse(chunk);
+          if (i + chunkSize < bytes.length) await new Promise(r => setTimeout(r, 20));
+        }
+
+        toast.className = 'status-toast status-ok';
+        toast.innerText = '✅ Đã phát chữ "' + normText + '" lên bảng LED!';
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 3000);
+      } catch (err) {
+        toast.className = 'status-toast status-err';
+        toast.innerText = '❌ Lỗi gửi BLE: ' + err.message;
+        toast.style.display = 'block';
+      }
+    });
+
+    // Stop Marquee (Switch to Static Mode)
+    document.getElementById('btnStopMarqueeBle').addEventListener('click', async () => {
+      if (!writeCharacteristic) return;
+      try {
+        const frame = buildFrame(0x04, 0x01, 0, 0); // Mode 1: Static Color
+        await writeCharacteristic.writeValueWithoutResponse(frame);
+        log('Đã dừng chế độ chạy chữ (chuyển về Static Color)');
+      } catch (err) {
+        log('Lỗi dừng chạy chữ: ' + err.message);
       }
     });
   </script>

@@ -19,6 +19,7 @@ void EffectManager::init() {
     rainbowEffect.init();
     chaseEffect.init();
     customEffect.init();
+    marqueeEffect.init();
 
     setMode(StateManager::getInstance().getSettings().currentMode);
     LOG_I(TAG, "Effect Manager initialized");
@@ -42,6 +43,9 @@ void EffectManager::setMode(EffectMode mode) {
         case EffectMode::CUSTOM_PRESET:
             activeEffect = &customEffect;
             break;
+        case EffectMode::MARQUEE_TEXT:
+            activeEffect = &marqueeEffect;
+            break;
         default:
             activeEffect = &customEffect;
             break;
@@ -56,7 +60,7 @@ void EffectManager::setMode(EffectMode mode) {
 void EffectManager::nextMode() {
     uint8_t modeInt = static_cast<uint8_t>(StateManager::getInstance().getSettings().currentMode);
     modeInt++;
-    if (modeInt > static_cast<uint8_t>(EffectMode::CUSTOM_PRESET)) {
+    if (modeInt > static_cast<uint8_t>(EffectMode::MARQUEE_TEXT)) {
         modeInt = static_cast<uint8_t>(EffectMode::STATIC_COLOR);
     }
 

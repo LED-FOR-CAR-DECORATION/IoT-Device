@@ -5,7 +5,7 @@
 #define TAG "PROJECTION"
 
 CustomProjectionEffect::CustomProjectionEffect()
-    : currentFrameIndex(0), lastFrameTick(0), hasValidPattern(false) {
+    : currentFrameIndex(0), lastFrameTick(0), hasValidPattern(false), isLiveDrawingActive(false) {
     frameMutex = xSemaphoreCreateMutex();
 }
 
@@ -18,6 +18,11 @@ CustomProjectionEffect::~CustomProjectionEffect() {
 void CustomProjectionEffect::init() {
     currentFrameIndex = 0;
     lastFrameTick = millis();
+
+    // Preserve blank canvas if live drawing mode is active
+    if (isLiveDrawingActive) {
+        return;
+    }
 
     if (!loadFromFlash(DEFAULT_PATTERN_PATH)) {
         LOG_W(TAG, "No default pattern found in SPIFFS flash");
@@ -64,6 +69,7 @@ bool CustomProjectionEffect::setFrames(const ProjectionHeader& header, const uin
         currentFrameIndex = 0;
         lastFrameTick = millis();
         hasValidPattern = true;
+        isLiveDrawingActive = false;
         xSemaphoreGive(frameMutex);
 
         LOG_I(TAG, "Loaded %d projection frame(s) [%dx%d, delay: %dms]",
@@ -78,6 +84,11 @@ bool CustomProjectionEffect::setFrames(const ProjectionHeader& header, const uin
 void CustomProjectionEffect::drawLivePixel(int16_t x, int16_t y, uint16_t color565) {
     if (x < 0 || x >= currentHeader.width || y < 0 || y >= currentHeader.height) {
         return;
+    }
+
+    // Auto-reset to pure blank black canvas if drawing starts while an image was displayed
+    if (!isLiveDrawingActive) {
+        resetToBlankCanvas();
     }
 
     if (xSemaphoreTake(frameMutex, pdMS_TO_TICKS(20)) == pdTRUE) {
@@ -109,6 +120,7 @@ void CustomProjectionEffect::resetToBlankCanvas() {
         pixelBuffer.assign(64 * 32, 0x0000); // 2048 black pixels
         currentFrameIndex = 0;
         hasValidPattern = true;
+        isLiveDrawingActive = true;
         xSemaphoreGive(frameMutex);
     }
     LedDriver::getInstance().clear();
@@ -118,6 +130,7 @@ void CustomProjectionEffect::clearFrames() {
     if (xSemaphoreTake(frameMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
         pixelBuffer.clear();
         hasValidPattern = false;
+        isLiveDrawingActive = false;
         currentFrameIndex = 0;
         xSemaphoreGive(frameMutex);
     }
@@ -126,7 +139,7 @@ void CustomProjectionEffect::clearFrames() {
 void CustomProjectionEffect::update(const DeviceSettings& settings) {
     LedDriver& led = LedDriver::getInstance();
 
-    if (!hasValidPattern) {
+    if (!hasValidPattern && !isLiveDrawingActive) {
         // Attempt lazy load once if uninitialized
         if (!loadFromFlash(DEFAULT_PATTERN_PATH)) {
             led.clear();

@@ -201,9 +201,9 @@ void BleManager::handleBinaryFrame(const uint8_t* frame, size_t length) {
 
         case BLE_CMD_CANVAS_CLEAR:
             LOG_I(TAG, "BLE: Switching to blank black board for live drawing");
-            EffectManager::getInstance().getCustomEffect().resetToBlankCanvas();
             state.setMode(EffectMode::CUSTOM_PRESET);
             EffectManager::getInstance().setMode(EffectMode::CUSTOM_PRESET);
+            EffectManager::getInstance().getCustomEffect().resetToBlankCanvas();
             break;
 
         default:
@@ -483,6 +483,39 @@ void BleManager::handleJsonPayload(const std::string& commandStr) {
         state.setPrimaryColor(r, g, b);
     }
 
+    // Marquee / Scrolling Text JSON Commands:
+    bool isMarquee = false;
+    if (doc["type"].is<const char*>() && strcmp(doc["type"].as<const char*>(), "marquee") == 0) isMarquee = true;
+    if (doc["command"].is<const char*>() && strcmp(doc["command"].as<const char*>(), "marquee") == 0) isMarquee = true;
+    if (doc["text"].is<const char*>()) isMarquee = true;
+
+    if (isMarquee) {
+        const char* textStr = doc["text"] | "CAR LED";
+        uint8_t r = 255, g = 215, b = 0;
+        if (doc["color"].is<JsonObject>()) {
+            r = doc["color"]["r"] | 255;
+            g = doc["color"]["g"] | 215;
+            b = doc["color"]["b"] | 0;
+        }
+        uint8_t speed = doc["speed"] | 60;
+        uint8_t size = doc["size"] | 1;
+        int16_t yPos = doc["y_pos"] | -1;
+        bool rainbow = doc["rainbow"] | false;
+        const char* modeStr = doc["mode"] | "scroll_left";
+
+        EffectManager::getInstance().getMarqueeEffect().configure(
+            String(textStr), RGBColor(r, g, b), speed, size, yPos, rainbow, String(modeStr)
+        );
+
+        state.setMode(EffectMode::MARQUEE_TEXT);
+        EffectManager::getInstance().setMode(EffectMode::MARQUEE_TEXT);
+
+        LOG_I(TAG, "BLE: Activated Marquee Text: '%s' (sz: %d, spd: %d, rainbow: %d, mode: %s)",
+              textStr, size, speed, rainbow, modeStr);
+        sendStatusNotification("{\"event\":\"marquee_active\",\"text\":\"" + String(textStr) + "\"}");
+        return;
+    }
+
     // Flow 2 JSON Commands:
     if (doc["command"].is<const char*>()) {
         const char* cmd = doc["command"].as<const char*>();
@@ -510,6 +543,11 @@ void BleManager::handleJsonPayload(const std::string& commandStr) {
                 WifiManager::getInstance().connectNewWifi(ssid, pass);
                 sendStatusNotification("{\"event\":\"wifi_connecting\",\"ssid\":\"" + String(ssid) + "\"}");
             }
+        } else if (strcmp(cmd, "canvas_clear") == 0 || strcmp(cmd, "clear_canvas") == 0) {
+            state.setMode(EffectMode::CUSTOM_PRESET);
+            EffectManager::getInstance().setMode(EffectMode::CUSTOM_PRESET);
+            EffectManager::getInstance().getCustomEffect().resetToBlankCanvas();
+            sendStatusNotification("{\"event\":\"canvas_cleared\"}");
         }
     }
 

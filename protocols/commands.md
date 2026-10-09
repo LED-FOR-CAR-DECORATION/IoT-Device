@@ -104,6 +104,28 @@ Dùng cho các lệnh có cấu trúc phức tạp: cấu hình Wi-Fi, đặt t�
 - `4`: CHASE_FLOW
 - `5`: MUSIC_REACTIVE
 - `6`: CUSTOM_PRESET (Ảnh/Animation nạp từ Flash SPIFFS)
+- `7`: MARQUEE_TEXT (Bảng chạy chữ tùy biến)
+
+#### Lệnh Chạy Chữ (Marquee Banner):
+```json
+{
+  "type": "marquee",
+  "text": "XIN NHUONG DUONG - CAM ON!",
+  "color": {"r": 255, "g": 215, "b": 0},
+  "speed": 60,
+  "size": 1,
+  "y_pos": -1,
+  "mode": "scroll_left",
+  "rainbow": false
+}
+```
+*Ghi chú:*
+- `speed`: 1 - 100 (tốc độ cuộn).
+- `size`: `1` (5x7px vừa vặn) hoặc `2` (10x14px chữ lớn).
+- `y_pos`: `-1` (tự động căn giữa bảng).
+- `mode`: `"scroll_left"` (cuộn trái), `"static"` (đứng yên), `"blink"` (nhấp nháy).
+- `rainbow`: `true` (chữ hiệu ứng 7 màu cầu vồng).
+- Hệ thống tự động khử dấu tiếng Việt (ví dụ "CẢM ƠN" $\rightarrow$ "CAM ON") để tương thích hoàn hảo font GFX phần cứng.
 
 #### Nạp / Quản lý Animation (Flow 2):
 ```json

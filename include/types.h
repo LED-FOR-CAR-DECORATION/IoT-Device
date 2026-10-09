@@ -15,7 +15,8 @@ enum class EffectMode : uint8_t {
     RAINBOW_WAVE,
     CHASE_FLOW,
     WELCOME_CAR,
-    CUSTOM_PRESET
+    CUSTOM_PRESET,
+    MARQUEE_TEXT
 };
 
 // RGB Color structure

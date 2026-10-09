@@ -6,6 +6,7 @@
 #include "RainbowEffect.h"
 #include "ChaseEffect.h"
 #include "CustomProjectionEffect.h"
+#include "MarqueeTextEffect.h"
 #include <vector>
 #include <memory>
 
@@ -19,6 +20,7 @@ public:
     void nextMode();
     IEffect* getCurrentEffect();
     CustomProjectionEffect& getCustomEffect() { return customEffect; }
+    MarqueeTextEffect& getMarqueeEffect() { return marqueeEffect; }
 
 private:
     EffectManager();
@@ -30,6 +32,7 @@ private:
     RainbowEffect rainbowEffect;
     ChaseEffect chaseEffect;
     CustomProjectionEffect customEffect;
+    MarqueeTextEffect marqueeEffect;
 
     unsigned long lastFrameTime;
 };

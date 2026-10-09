@@ -94,6 +94,35 @@ void MqttManager::callback(char* topic, byte* payload, unsigned int length) {
         state.setPrimaryColor(r, g, b);
     }
 
+    // Marquee / Scrolling Text JSON Commands
+    bool isMarquee = false;
+    if (doc["type"].is<const char*>() && strcmp(doc["type"].as<const char*>(), "marquee") == 0) isMarquee = true;
+    if (doc["command"].is<const char*>() && strcmp(doc["command"].as<const char*>(), "marquee") == 0) isMarquee = true;
+    if (doc["text"].is<const char*>()) isMarquee = true;
+
+    if (isMarquee) {
+        const char* textStr = doc["text"] | "CAR LED";
+        uint8_t r = 255, g = 215, b = 0;
+        if (doc["color"].is<JsonObject>()) {
+            r = doc["color"]["r"] | 255;
+            g = doc["color"]["g"] | 215;
+            b = doc["color"]["b"] | 0;
+        }
+        uint8_t speed = doc["speed"] | 60;
+        uint8_t size = doc["size"] | 1;
+        int16_t yPos = doc["y_pos"] | -1;
+        bool rainbow = doc["rainbow"] | false;
+        const char* modeStr = doc["mode"] | "scroll_left";
+
+        EffectManager::getInstance().getMarqueeEffect().configure(
+            String(textStr), RGBColor(r, g, b), speed, size, yPos, rainbow, String(modeStr)
+        );
+
+        state.setMode(EffectMode::MARQUEE_TEXT);
+        EffectManager::getInstance().setMode(EffectMode::MARQUEE_TEXT);
+        return;
+    }
+
     if (doc["command"].is<const char*>()) {
         const char* cmd = doc["command"].as<const char*>();
         if (strcmp(cmd, "reload_projection") == 0) {
