@@ -1,760 +1,1105 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Car LED Matrix - Bluetooth Master Suite</title>
-<style>
-  :root {
-    --bg: #0b0d17;
-    --card: #151828;
-    --card-border: #232842;
-    --accent: #00d2ff;
-    --accent-grad: linear-gradient(135deg, #00d2ff 0%, #7928ca 100%);
-    --text: #ffffff;
-    --text-muted: #8b92b2;
-    --success: #00f076;
-    --danger: #ff3366;
-    --warning: #ffb800;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-  body { background: var(--bg); color: var(--text); padding: 12px; min-height: 100vh; }
-  .container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
-  header { text-align: center; padding: 6px 0; }
-  header h1 { font-size: 20px; font-weight: 800; background: var(--accent-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  header p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-  
-  /* Connection Bar */
-  .conn-bar { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
-  .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
-  .badge-off { background: rgba(255, 51, 102, 0.15); color: var(--danger); border: 1px solid var(--danger); }
-  .badge-on { background: rgba(0, 240, 118, 0.15); color: var(--success); border: 1px solid var(--success); }
-  .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Car LED Matrix - Bluetooth Master Suite</title>
+  <style>
+    :root {
+      --bg: #0b0d17;
+      --card: #151828;
+      --card-border: #232842;
+      --accent: #00d2ff;
+      --accent-grad: linear-gradient(135deg, #00d2ff 0%, #7928ca 100%);
+      --text: #ffffff;
+      --text-muted: #8b92b2;
+      --success: #00f076;
+      --danger: #ff3366;
+      --warning: #ffb800;
+    }
 
-  /* Navigation Tabs */
-  .nav-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
-  .nav-tabs::-webkit-scrollbar { display: none; }
-  .tab-btn { flex: 1; min-width: 80px; padding: 8px 6px; background: var(--card); border: 1px solid var(--card-border); border-radius: 10px; color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; white-space: nowrap; transition: 0.2s; }
-  .tab-btn.active { background: rgba(0,210,255,0.15); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-  /* Tab Content Panes */
-  .tab-pane { display: none; flex-direction: column; gap: 12px; }
-  .tab-pane.active { display: flex; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      padding: 12px;
+      min-height: 100vh;
+    }
 
-  /* Card */
-  .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; padding: 14px; }
-  .card h2 { font-size: 15px; margin-bottom: 10px; color: var(--accent); display: flex; align-items: center; justify-content: space-between; }
-  
-  /* Buttons */
-  .btn { width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.15s; background: var(--accent-grad); color: #fff; margin-top: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-  .btn:active { transform: scale(0.98); }
-  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-  .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
-  .btn-success { background: var(--success); color: #000; }
-  .btn-danger { background: var(--danger); color: #fff; }
-  
-  /* Form Inputs */
-  .input-group { margin-bottom: 8px; }
-  .input-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
-  input[type=text], input[type=password], select { width: 100%; padding: 10px; background: #0c0e18; border: 1px solid var(--card-border); border-radius: 8px; color: #fff; font-size: 13px; }
-  
-  /* Sliders */
-  .slider-group { margin: 8px 0; }
-  .slider-group label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
-  input[type=range] { width: 100%; accent-color: var(--accent); height: 6px; }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-  /* Preview Canvas */
-  .preview-wrap { text-align: center; margin: 8px 0; background: #000; border-radius: 10px; padding: 10px; border: 2px solid #20243d; position: relative; touch-action: none; }
-  canvas { width: 100%; max-width: 384px; height: auto; aspect-ratio: 2/1; image-rendering: pixelated; border-radius: 6px; box-shadow: 0 0 16px rgba(0,210,255,0.15); background: #000; cursor: crosshair; }
+    header {
+      text-align: center;
+      padding: 6px 0;
+    }
 
-  /* Grid Layouts */
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .grid-modes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 6px; }
-  .mode-btn { padding: 10px; background: #1c2035; border: 1px solid var(--card-border); border-radius: 8px; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
-  .mode-btn:active, .mode-btn.active { border-color: var(--accent); background: rgba(0,210,255,0.15); color: var(--accent); }
+    header h1 {
+      font-size: 20px;
+      font-weight: 800;
+      background: var(--accent-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-  /* Color Palette Chips */
-  .color-chips { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-  .color-chip { width: 34px; height: 34px; border-radius: 8px; border: 2px solid transparent; cursor: pointer; transition: 0.1s; }
-  .color-chip:active, .color-chip.active { transform: scale(1.1); border-color: #fff; }
+    header p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
 
-  /* Progress Bar & Toast */
-  .progress-bar-wrap { width: 100%; height: 8px; background: #20243d; border-radius: 6px; overflow: hidden; margin-top: 8px; display: none; }
-  .progress-bar-fill { height: 100%; width: 0%; background: var(--accent-grad); transition: width 0.1s linear; }
-  .status-toast { padding: 10px; border-radius: 8px; font-size: 12px; text-align: center; margin-top: 8px; display: none; word-break: break-all; }
-  .status-ok { background: rgba(0,240,118,0.15); color: var(--success); border: 1px solid var(--success); }
-  .status-err { background: rgba(255,51,102,0.15); color: var(--danger); border: 1px solid var(--danger); }
-  .status-info { background: rgba(0,210,255,0.15); color: var(--accent); border: 1px solid var(--accent); }
+    /* Connection Bar */
+    .conn-bar {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-  /* File Uploader */
-  .file-input-wrap { position: relative; overflow: hidden; display: inline-block; width: 100%; margin-top: 4px; }
-  .file-input-wrap input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
-  .file-btn { display: block; text-align: center; padding: 12px; background: rgba(0,210,255,0.08); border: 1px dashed var(--accent); border-radius: 10px; color: var(--accent); font-weight: 600; font-size: 13px; }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
 
-  /* Log Box */
-  .log-box { background: #07080f; border: 1px solid var(--card-border); border-radius: 8px; padding: 8px; font-family: monospace; font-size: 11px; color: #a0aec0; max-height: 120px; overflow-y: auto; white-space: pre-wrap; margin-top: 6px; }
-</style>
+    .badge-off {
+      background: rgba(255, 51, 102, 0.15);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+
+    .badge-on {
+      background: rgba(0, 240, 118, 0.15);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+
+    .nav-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 80px;
+      padding: 8px 6px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      white-space: nowrap;
+      transition: 0.2s;
+    }
+
+    .tab-btn.active {
+      background: rgba(0, 210, 255, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* Tab Content Panes */
+    .tab-pane {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .tab-pane.active {
+      display: flex;
+    }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .card h2 {
+      font-size: 15px;
+      margin-bottom: 10px;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.15s;
+      background: var(--accent-grad);
+      color: #fff;
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #000;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    /* Form Inputs */
+    .input-group {
+      margin-bottom: 8px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    input[type=text],
+    input[type=password],
+    select {
+      width: 100%;
+      padding: 10px;
+      background: #0c0e18;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+    }
+
+    /* Sliders */
+    .slider-group {
+      margin: 8px 0;
+    }
+
+    .slider-group label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    input[type=range] {
+      width: 100%;
+      accent-color: var(--accent);
+      height: 6px;
+    }
+
+    /* Preview Canvas */
+    .preview-wrap {
+      text-align: center;
+      margin: 8px 0;
+      background: #000;
+      border-radius: 10px;
+      padding: 10px;
+      border: 2px solid #20243d;
+      position: relative;
+      touch-action: none;
+    }
+
+    canvas {
+      width: 100%;
+      max-width: 384px;
+      height: auto;
+      aspect-ratio: 2/1;
+      image-rendering: pixelated;
+      border-radius: 6px;
+      box-shadow: 0 0 16px rgba(0, 210, 255, 0.15);
+      background: #000;
+      cursor: crosshair;
+    }
+
+    /* Grid Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .grid-modes {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .mode-btn {
+      padding: 10px;
+      background: #1c2035;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .mode-btn:active,
+    .mode-btn.active {
+      border-color: var(--accent);
+      background: rgba(0, 210, 255, 0.15);
+      color: var(--accent);
+    }
+
+    /* Color Palette Chips */
+    .color-chips {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .color-chip {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+
+    .color-chip:active,
+    .color-chip.active {
+      transform: scale(1.1);
+      border-color: #fff;
+    }
+
+    /* Progress Bar & Toast */
+    .progress-bar-wrap {
+      width: 100%;
+      height: 8px;
+      background: #20243d;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent-grad);
+      transition: width 0.1s linear;
+    }
+
+    .status-toast {
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      text-align: center;
+      margin-top: 8px;
+      display: none;
+      word-break: break-all;
+    }
+
+    .status-ok {
+      background: rgba(0, 240, 118, 0.15);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+
+    .status-err {
+      background: rgba(255, 51, 102, 0.15);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+
+    .status-info {
+      background: rgba(0, 210, 255, 0.15);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    /* File Uploader */
+    .file-input-wrap {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .file-input-wrap input[type=file] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .file-btn {
+      display: block;
+      text-align: center;
+      padding: 12px;
+      background: rgba(0, 210, 255, 0.08);
+      border: 1px dashed var(--accent);
+      border-radius: 10px;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    /* Log Box */
+    .log-box {
+      background: #07080f;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #a0aec0;
+      max-height: 120px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      margin-top: 6px;
+    }
+  </style>
 </head>
+
 <body>
-<div class="container">
-  <header>
-    <h1>🚗 Smart LED Car - Bluetooth Suite</h1>
-    <p>Trình điều khiển & Kiểm thử toàn diện qua Bluetooth BLE</p>
-  </header>
+  <div class="container">
+    <header>
+      <h1>🚗 Smart LED Car - Bluetooth Suite</h1>
+      <p>Trình điều khiển & Kiểm thử toàn diện qua Bluetooth BLE</p>
+    </header>
 
-  <!-- Bluetooth Top Connection Bar -->
-  <div class="conn-bar">
-    <div style="display:flex; align-items:center; gap:8px;">
-      <span class="badge badge-off" id="bleBadge">Chưa kết nối</span>
-      <span id="bleDeviceName" style="font-size:12px; color:var(--text-muted);">CarLED-Ambient</span>
+    <!-- Bluetooth Top Connection Bar -->
+    <div class="conn-bar">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="badge badge-off" id="bleBadge">Chưa kết nối</span>
+        <span id="bleDeviceName" style="font-size:12px; color:var(--text-muted);">CarLED-Ambient</span>
+      </div>
+      <div>
+        <button class="btn-sm btn-outline" id="btnConnectBle">🔍 Kết Nối BLE</button>
+        <button class="btn-sm btn-danger" id="btnDisconnectBle" style="display:none;">Ngắt Kết Nối</button>
+      </div>
     </div>
-    <div>
-      <button class="btn-sm btn-outline" id="btnConnectBle">🔍 Kết Nối BLE</button>
-      <button class="btn-sm btn-danger" id="btnDisconnectBle" style="display:none;">Ngắt Kết Nối</button>
+
+    <!-- Navigation Tabs (Tất cả tính năng Bluetooth trong danh sách) -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('tab-import')">🖼️ Chiếu Ảnh</button>
+      <button class="tab-btn" onclick="switchTab('tab-controls')">🎛️ Bảng Đèn</button>
+      <button class="tab-btn" onclick="switchTab('tab-canvas')">🎨 Bút Vẽ Live</button>
+      <button class="tab-btn" onclick="switchTab('tab-wifi')">📶 Wi-Fi</button>
+      <button class="tab-btn" onclick="switchTab('tab-logs')">📋 Nhật Ký</button>
     </div>
-  </div>
 
-  <!-- Navigation Tabs (Tất cả tính năng Bluetooth trong danh sách) -->
-  <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('tab-import')">🖼️ Chiếu Ảnh</button>
-    <button class="tab-btn" onclick="switchTab('tab-controls')">🎛️ Bảng Đèn</button>
-    <button class="tab-btn" onclick="switchTab('tab-canvas')">🎨 Bút Vẽ Live</button>
-    <button class="tab-btn" onclick="switchTab('tab-wifi')">📶 Wi-Fi</button>
-    <button class="tab-btn" onclick="switchTab('tab-logs')">📋 Nhật Ký</button>
-  </div>
+    <!-- ================= TAB 1: IMPORT ẢNH (FLOW 2) ================= -->
+    <div class="tab-pane active" id="tab-import">
+      <div class="card">
+        <h2><span>🖼️ Nạp & Chiếu Ảnh Pixel Art (64x32)</span></h2>
+        <div class="file-input-wrap">
+          <div class="file-btn" id="fileBtnLabel">📁 Chọn ảnh từ thiết bị (JPG / PNG / GIF)</div>
+          <input type="file" id="imageInput" accept="image/*">
+        </div>
 
-  <!-- ================= TAB 1: IMPORT ẢNH (FLOW 2) ================= -->
-  <div class="tab-pane active" id="tab-import">
-    <div class="card">
-      <h2><span>🖼️ Nạp & Chiếu Ảnh Pixel Art (64x32)</span></h2>
-      <div class="file-input-wrap">
-        <div class="file-btn" id="fileBtnLabel">📁 Chọn ảnh từ thiết bị (JPG / PNG / GIF)</div>
-        <input type="file" id="imageInput" accept="image/*">
+        <div class="preview-wrap">
+          <canvas id="previewCanvas" width="64" height="32"></canvas>
+        </div>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label>Kiểu Khung Hình (Crop/Fit)</label>
+            <select id="fitMode">
+              <option value="cover">Cover (Cắt vừa tỉ lệ 2:1)</option>
+              <option value="contain">Contain (Giữ nguyên tỉ lệ)</option>
+              <option value="stretch" selected>Stretch (Kéo dãn toàn khung)</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Thuật toán Dithering</label>
+            <select id="ditherMode">
+              <option value="none" selected>Không Dithering (Mịn)</option>
+              <option value="floyd">Floyd-Steinberg (Pixel Art)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="slider-group">
+          <label><span>Độ Sáng Ảnh (Brightness)</span><span id="briVal">100%</span></label>
+          <input type="range" id="briSlider" min="40" max="220" value="100">
+        </div>
+
+        <div class="slider-group">
+          <label><span>Độ Tương Phản (Contrast)</span><span id="conVal">100%</span></label>
+          <input type="range" id="conSlider" min="40" max="220" value="100">
+        </div>
+
+        <button class="btn" id="btnUploadBle" disabled>🚀 Chiếu Lên LED Qua Bluetooth BLE</button>
+
+        <div class="progress-bar-wrap" id="uploadProgress">
+          <div class="progress-bar-fill" id="uploadProgressFill"></div>
+        </div>
+
+        <div class="status-toast" id="uploadToast"></div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 2: ĐIỀU KHIỂN ĐÈN TRỰC TIẾP ================= -->
+    <div class="tab-pane" id="tab-controls">
+      <!-- Nguồn & Độ sáng -->
+      <div class="card">
+        <h2>
+          <span>💡 Nguồn & Độ Sáng LED Matrix</span>
+          <button class="btn-sm btn-success" id="btnPowerToggle" style="width:auto;">Bật Nguồn</button>
+        </h2>
+
+        <div class="slider-group" style="margin-top:10px;">
+          <label><span>Độ Sáng Bảng LED (Matrix Brightness)</span><span id="matrixBriVal">180</span></label>
+          <input type="range" id="matrixBriSlider" min="5" max="255" value="180">
+        </div>
+
+        <div class="slider-group">
+          <label><span>Tốc Độ Chuyển Động (Speed)</span><span id="matrixSpeedVal">50</span></label>
+          <input type="range" id="matrixSpeedSlider" min="1" max="100" value="50">
+        </div>
+
+        <div class="slider-group">
+          <label><span>Độ Nhạy Cảm Ứng Âm Thanh (Mic Sens)</span><span id="matrixMicVal">60</span></label>
+          <input type="range" id="matrixMicSlider" min="1" max="100" value="60">
+        </div>
       </div>
 
-      <div class="preview-wrap">
-        <canvas id="previewCanvas" width="64" height="32"></canvas>
+      <!-- Chọn Màu Sắc RGB -->
+      <div class="card">
+        <h2><span>🎨 Chọn Màu Thời Gian Thực (RGB Color)</span></h2>
+        <div style="display:flex; align-items:center; gap:10px; margin-top:6px;">
+          <input type="color" id="rgbColorPicker" value="#00d2ff"
+            style="width:50px; height:38px; border:none; background:transparent; cursor:pointer;">
+          <span style="font-size:13px; color:var(--text-muted);" id="rgbHexLabel">Màu: #00d2ff (R:0, G:210,
+            B:255)</span>
+        </div>
+        <div class="color-chips">
+          <div class="color-chip active" style="background:#00d2ff;" onclick="pickColor(0, 210, 255)"></div>
+          <div class="color-chip" style="background:#ff0055;" onclick="pickColor(255, 0, 85)"></div>
+          <div class="color-chip" style="background:#00f076;" onclick="pickColor(0, 240, 118)"></div>
+          <div class="color-chip" style="background:#ffb800;" onclick="pickColor(255, 184, 0)"></div>
+          <div class="color-chip" style="background:#9900ff;" onclick="pickColor(153, 0, 255)"></div>
+          <div class="color-chip" style="background:#ffffff;" onclick="pickColor(255, 255, 255)"></div>
+          <div class="color-chip" style="background:#ff6600;" onclick="pickColor(255, 102, 0)"></div>
+        </div>
       </div>
 
-      <div class="grid-2">
+      <!-- Danh sách Chế độ Hiệu ứng -->
+      <div class="card">
+        <h2><span>✨ Chuyển Đổi Hiệu Ứng (Mode Switcher)</span></h2>
+        <div class="grid-modes">
+          <button class="mode-btn active" onclick="setModeBle(6)">🏎️ Xe Đua Mascot (Custom)</button>
+          <button class="mode-btn" onclick="setModeBle(3)">🌈 Sóng Cầu Vồng</button>
+          <button class="mode-btn" onclick="setModeBle(4)">🌊 Dòng Chảy Đuổi</button>
+          <button class="mode-btn" onclick="setModeBle(2)">🫁 Nhịp Thở Đổi Màu</button>
+          <button class="mode-btn" onclick="setModeBle(1)">🎨 Màu Đơn Sắc</button>
+          <button class="mode-btn" onclick="setModeBle(0)">🌑 Tắt Phát Sáng</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 3: BÚT VẼ TRỰC TIẾP (LIVE CANVAS) ================= -->
+    <div class="tab-pane" id="tab-canvas">
+      <div class="card">
+        <h2>
+          <span>🎨 Bút Vẽ Trực Tiếp Lên Màn LED</span>
+          <button class="btn-sm btn-outline" onclick="clearLiveCanvas()">🧹 Xóa Bảng</button>
+        </h2>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
+          Dùng ngón tay chạm hoặc vẽ lên ô lưới 64x32. Nét vẽ sẽ xuất hiện <b>tức thì</b> lên bảng LED HUB75 qua gói
+          Batch Drawing (Opcode 0x14)!
+        </p>
+
+        <div class="preview-wrap">
+          <canvas id="liveCanvas" width="64" height="32"></canvas>
+        </div>
+
+        <div class="color-chips" style="justify-content:center; margin-top:8px;">
+          <span style="font-size:12px; color:var(--text-muted); line-height:34px; margin-right:4px;">Màu vẽ:</span>
+          <div class="color-chip active" style="background:#00d2ff;" onclick="setDrawColor(0, 210, 255, this)"></div>
+          <div class="color-chip" style="background:#ff0055;" onclick="setDrawColor(255, 0, 85, this)"></div>
+          <div class="color-chip" style="background:#00f076;" onclick="setDrawColor(0, 240, 118, this)"></div>
+          <div class="color-chip" style="background:#ffb800;" onclick="setDrawColor(255, 184, 0, this)"></div>
+          <div class="color-chip" style="background:#ffffff;" onclick="setDrawColor(255, 255, 255, this)"></div>
+          <div class="color-chip" style="background:#000000; border-color:#555;" onclick="setDrawColor(0, 0, 0, this)"
+            title="Tẩy xóa"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 4: CẤU HÌNH WI-FI ================= -->
+    <div class="tab-pane" id="tab-wifi">
+      <div class="card">
+        <h2>📶 Cấp Wi-Fi Cho ESP32 Qua BLE</h2>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+          Gửi thông tin Wi-Fi (hoặc Hotspot điện thoại phát ra) qua Bluetooth để ESP32 kết nối mạng xe hơi.
+        </p>
         <div class="input-group">
-          <label>Kiểu Khung Hình (Crop/Fit)</label>
-          <select id="fitMode">
-            <option value="cover">Cover (Cắt vừa tỉ lệ 2:1)</option>
-            <option value="contain">Contain (Giữ nguyên tỉ lệ)</option>
-            <option value="stretch" selected>Stretch (Kéo dãn toàn khung)</option>
-          </select>
+          <label>Tên Wi-Fi (SSID)</label>
+          <input type="text" id="wifiSsid" placeholder="Ví dụ: Lam's_PHONGLANH">
         </div>
         <div class="input-group">
-          <label>Thuật toán Dithering</label>
-          <select id="ditherMode">
-            <option value="none" selected>Không Dithering (Mịn)</option>
-            <option value="floyd">Floyd-Steinberg (Pixel Art)</option>
-          </select>
+          <label>Mật Khẩu Wi-Fi (Password)</label>
+          <input type="password" id="wifiPass" placeholder="Nhập mật khẩu Wi-Fi">
+        </div>
+        <button class="btn btn-outline" id="btnSendWifiBle" disabled>📡 Gửi Cấu Hình Wi-Fi Tới ESP32 (BLE)</button>
+
+        <div id="wifiIpDisplay" style="margin-top:10px; display:none;">
+          <div class="status-toast status-ok" style="display:block;" id="wifiIpText"></div>
+          <a id="btnOpenWebPortal" target="_blank" class="btn btn-success"
+            style="text-decoration:none; margin-top:8px;">🌐 Mở Web Portal ESP32</a>
         </div>
       </div>
-
-      <div class="slider-group">
-        <label><span>Độ Sáng Ảnh (Brightness)</span><span id="briVal">100%</span></label>
-        <input type="range" id="briSlider" min="40" max="220" value="100">
-      </div>
-
-      <div class="slider-group">
-        <label><span>Độ Tương Phản (Contrast)</span><span id="conVal">100%</span></label>
-        <input type="range" id="conSlider" min="40" max="220" value="100">
-      </div>
-
-      <button class="btn" id="btnUploadBle" disabled>🚀 Chiếu Lên LED Qua Bluetooth BLE</button>
-      
-      <div class="progress-bar-wrap" id="uploadProgress">
-        <div class="progress-bar-fill" id="uploadProgressFill"></div>
-      </div>
-
-      <div class="status-toast" id="uploadToast"></div>
-    </div>
-  </div>
-
-  <!-- ================= TAB 2: ĐIỀU KHIỂN ĐÈN TRỰC TIẾP ================= -->
-  <div class="tab-pane" id="tab-controls">
-    <!-- Nguồn & Độ sáng -->
-    <div class="card">
-      <h2>
-        <span>💡 Nguồn & Độ Sáng LED Matrix</span>
-        <button class="btn-sm btn-success" id="btnPowerToggle" style="width:auto;">Bật Nguồn</button>
-      </h2>
-      
-      <div class="slider-group" style="margin-top:10px;">
-        <label><span>Độ Sáng Bảng LED (Matrix Brightness)</span><span id="matrixBriVal">180</span></label>
-        <input type="range" id="matrixBriSlider" min="5" max="255" value="180">
-      </div>
-
-      <div class="slider-group">
-        <label><span>Tốc Độ Chuyển Động (Speed)</span><span id="matrixSpeedVal">50</span></label>
-        <input type="range" id="matrixSpeedSlider" min="1" max="100" value="50">
-      </div>
-
-      <div class="slider-group">
-        <label><span>Độ Nhạy Cảm Ứng Âm Thanh (Mic Sens)</span><span id="matrixMicVal">60</span></label>
-        <input type="range" id="matrixMicSlider" min="1" max="100" value="60">
-      </div>
     </div>
 
-    <!-- Chọn Màu Sắc RGB -->
-    <div class="card">
-      <h2><span>🎨 Chọn Màu Thời Gian Thực (RGB Color)</span></h2>
-      <div style="display:flex; align-items:center; gap:10px; margin-top:6px;">
-        <input type="color" id="rgbColorPicker" value="#00d2ff" style="width:50px; height:38px; border:none; background:transparent; cursor:pointer;">
-        <span style="font-size:13px; color:var(--text-muted);" id="rgbHexLabel">Màu: #00d2ff (R:0, G:210, B:255)</span>
-      </div>
-      <div class="color-chips">
-        <div class="color-chip active" style="background:#00d2ff;" onclick="pickColor(0, 210, 255)"></div>
-        <div class="color-chip" style="background:#ff0055;" onclick="pickColor(255, 0, 85)"></div>
-        <div class="color-chip" style="background:#00f076;" onclick="pickColor(0, 240, 118)"></div>
-        <div class="color-chip" style="background:#ffb800;" onclick="pickColor(255, 184, 0)"></div>
-        <div class="color-chip" style="background:#9900ff;" onclick="pickColor(153, 0, 255)"></div>
-        <div class="color-chip" style="background:#ffffff;" onclick="pickColor(255, 255, 255)"></div>
-        <div class="color-chip" style="background:#ff6600;" onclick="pickColor(255, 102, 0)"></div>
-      </div>
-    </div>
-
-    <!-- Danh sách Chế độ Hiệu ứng -->
-    <div class="card">
-      <h2><span>✨ Chuyển Đổi Hiệu Ứng (Mode Switcher)</span></h2>
-      <div class="grid-modes">
-        <button class="mode-btn active" onclick="setModeBle(6)">🏎️ Xe Đua Mascot (Custom)</button>
-        <button class="mode-btn" onclick="setModeBle(3)">🌈 Sóng Cầu Vồng</button>
-        <button class="mode-btn" onclick="setModeBle(4)">🌊 Dòng Chảy Đuổi</button>
-        <button class="mode-btn" onclick="setModeBle(2)">🫁 Nhịp Thở Đổi Màu</button>
-        <button class="mode-btn" onclick="setModeBle(1)">🎨 Màu Đơn Sắc</button>
-        <button class="mode-btn" onclick="setModeBle(0)">🌑 Tắt Phát Sáng</button>
+    <!-- ================= TAB 5: NHẬT KÝ HOẠT ĐỘNG ================= -->
+    <div class="tab-pane" id="tab-logs">
+      <div class="card">
+        <h2>
+          <span>📋 Nhật Ký Hoạt Động (Telemetry & Logs)</span>
+          <button class="btn-sm btn-outline" onclick="document.getElementById('logBox').innerText=''">Xóa Log</button>
+        </h2>
+        <div class="log-box" id="logBox">Hệ thống sẵn sàng...</div>
       </div>
     </div>
   </div>
 
-  <!-- ================= TAB 3: BÚT VẼ TRỰC TIẾP (LIVE CANVAS) ================= -->
-  <div class="tab-pane" id="tab-canvas">
-    <div class="card">
-      <h2>
-        <span>🎨 Bút Vẽ Trực Tiếp Lên Màn LED</span>
-        <button class="btn-sm btn-outline" onclick="clearLiveCanvas()">🧹 Xóa Bảng</button>
-      </h2>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
-        Dùng ngón tay chạm hoặc vẽ lên ô lưới 64x32. Nét vẽ sẽ xuất hiện <b>tức thì</b> lên bảng LED HUB75 qua gói Batch Drawing (Opcode 0x14)!
-      </p>
+  <script>
+    // BLE UUIDs
+    const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+    const WRITE_CHAR_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+    const STATUS_CHAR_UUID = "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e";
 
-      <div class="preview-wrap">
-        <canvas id="liveCanvas" width="64" height="32"></canvas>
-      </div>
+    let bleDevice = null;
+    let writeCharacteristic = null;
+    let statusCharacteristic = null;
 
-      <div class="color-chips" style="justify-content:center; margin-top:8px;">
-        <span style="font-size:12px; color:var(--text-muted); line-height:34px; margin-right:4px;">Màu vẽ:</span>
-        <div class="color-chip active" style="background:#00d2ff;" onclick="setDrawColor(0, 210, 255, this)"></div>
-        <div class="color-chip" style="background:#ff0055;" onclick="setDrawColor(255, 0, 85, this)"></div>
-        <div class="color-chip" style="background:#00f076;" onclick="setDrawColor(0, 240, 118, this)"></div>
-        <div class="color-chip" style="background:#ffb800;" onclick="setDrawColor(255, 184, 0, this)"></div>
-        <div class="color-chip" style="background:#ffffff;" onclick="setDrawColor(255, 255, 255, this)"></div>
-        <div class="color-chip" style="background:#000000; border-color:#555;" onclick="setDrawColor(0, 0, 0, this)" title="Tẩy xóa"></div>
-      </div>
-    </div>
-  </div>
+    // Tab switcher
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      if (window.event && window.event.target) {
+        window.event.target.classList.add('active');
+      }
 
-  <!-- ================= TAB 4: CẤU HÌNH WI-FI ================= -->
-  <div class="tab-pane" id="tab-wifi">
-    <div class="card">
-      <h2>📶 Cấp Wi-Fi Cho ESP32 Qua BLE</h2>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
-        Gửi thông tin Wi-Fi (hoặc Hotspot điện thoại phát ra) qua Bluetooth để ESP32 kết nối mạng xe hơi.
-      </p>
-      <div class="input-group">
-        <label>Tên Wi-Fi (SSID)</label>
-        <input type="text" id="wifiSsid" placeholder="Ví dụ: Lam's_PHONGLANH">
-      </div>
-      <div class="input-group">
-        <label>Mật Khẩu Wi-Fi (Password)</label>
-        <input type="password" id="wifiPass" placeholder="Nhập mật khẩu Wi-Fi">
-      </div>
-      <button class="btn btn-outline" id="btnSendWifiBle" disabled>📡 Gửi Cấu Hình Wi-Fi Tới ESP32 (BLE)</button>
-      
-      <div id="wifiIpDisplay" style="margin-top:10px; display:none;">
-        <div class="status-toast status-ok" style="display:block;" id="wifiIpText"></div>
-        <a id="btnOpenWebPortal" target="_blank" class="btn btn-success" style="text-decoration:none; margin-top:8px;">🌐 Mở Web Portal ESP32</a>
-      </div>
-    </div>
-  </div>
+      // Tự động chuyển bảng LED về màn hình đen khi mở Tab Bút Vẽ
+      if (tabId === 'tab-canvas') {
+        clearLiveCanvas();
+      }
+    }
 
-  <!-- ================= TAB 5: NHẬT KÝ HOẠT ĐỘNG ================= -->
-  <div class="tab-pane" id="tab-logs">
-    <div class="card">
-      <h2>
-        <span>📋 Nhật Ký Hoạt Động (Telemetry & Logs)</span>
-        <button class="btn-sm btn-outline" onclick="document.getElementById('logBox').innerText=''">Xóa Log</button>
-      </h2>
-      <div class="log-box" id="logBox">Hệ thống sẵn sàng...</div>
-    </div>
-  </div>
-</div>
+    function log(msg) {
+      const box = document.getElementById('logBox');
+      const time = new Date().toLocaleTimeString();
+      box.innerHTML = `[${time}] ${msg}\n` + box.innerHTML;
+    }
 
-<script>
-// BLE UUIDs
-const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
-const WRITE_CHAR_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
-const STATUS_CHAR_UUID = "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e";
+    // 7-Byte Standard Binary Frame Builder with XOR Checksum
+    // Format: [0xAA, cmd, p1, p2, p3, checksum, 0x55]
+    function buildFrame(cmd, p1 = 0, p2 = 0, p3 = 0) {
+      const b1 = p1 & 0xFF;
+      const b2 = p2 & 0xFF;
+      const b3 = p3 & 0xFF;
+      const csum = (cmd ^ b1 ^ b2 ^ b3) & 0xFF;
+      return new Uint8Array([0xAA, cmd, b1, b2, b3, csum, 0x55]);
+    }
 
-let bleDevice = null;
-let writeCharacteristic = null;
-let statusCharacteristic = null;
+    // Rate Limiter for Smooth Sliders (35ms ~ 28 FPS)
+    let lastBleSendTime = 0;
+    async function sendThrottledBle(frame, force = false) {
+      if (!writeCharacteristic) return;
+      const now = performance.now();
+      if (!force && (now - lastBleSendTime < 35)) return;
+      lastBleSendTime = now;
+      try {
+        await writeCharacteristic.writeValueWithoutResponse(frame);
+      } catch (e) {
+        console.error('BLE Write error:', e);
+      }
+    }
 
-// Tab switcher
-function switchTab(tabId) {
-  document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  if (window.event && window.event.target) {
-    window.event.target.classList.add('active');
-  }
+    // --- BLUETOOTH CONNECTION ---
+    document.getElementById('btnConnectBle').addEventListener('click', async () => {
+      try {
+        log('Đang quét Bluetooth tìm CarLED-Ambient...');
+        bleDevice = await navigator.bluetooth.requestDevice({
+          filters: [{ name: 'CarLED-Ambient' }],
+          optionalServices: [SERVICE_UUID]
+        });
 
-  // Tự động chuyển bảng LED về màn hình đen khi mở Tab Bút Vẽ
-  if (tabId === 'tab-canvas') {
-    clearLiveCanvas();
-  }
-}
+        bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+        log('Đang kết nối GATT server...');
+        const server = await bleDevice.gatt.connect();
 
-function log(msg) {
-  const box = document.getElementById('logBox');
-  const time = new Date().toLocaleTimeString();
-  box.innerHTML = `[${time}] ${msg}\n` + box.innerHTML;
-}
+        log('Đang khám phá LED Service...');
+        const service = await server.getPrimaryService(SERVICE_UUID);
 
-// 7-Byte Standard Binary Frame Builder with XOR Checksum
-// Format: [0xAA, cmd, p1, p2, p3, checksum, 0x55]
-function buildFrame(cmd, p1 = 0, p2 = 0, p3 = 0) {
-  const b1 = p1 & 0xFF;
-  const b2 = p2 & 0xFF;
-  const b3 = p3 & 0xFF;
-  const csum = (cmd ^ b1 ^ b2 ^ b3) & 0xFF;
-  return new Uint8Array([0xAA, cmd, b1, b2, b3, csum, 0x55]);
-}
+        writeCharacteristic = await service.getCharacteristic(WRITE_CHAR_UUID);
+        log('✅ Đã kết nối Control Characteristic!');
 
-// Rate Limiter for Smooth Sliders (35ms ~ 28 FPS)
-let lastBleSendTime = 0;
-async function sendThrottledBle(frame, force = false) {
-  if (!writeCharacteristic) return;
-  const now = performance.now();
-  if (!force && (now - lastBleSendTime < 35)) return;
-  lastBleSendTime = now;
-  try {
-    await writeCharacteristic.writeValueWithoutResponse(frame);
-  } catch(e) {
-    console.error('BLE Write error:', e);
-  }
-}
+        try {
+          statusCharacteristic = await service.getCharacteristic(STATUS_CHAR_UUID);
+          await statusCharacteristic.startNotifications();
+          statusCharacteristic.addEventListener('characteristicvaluechanged', (e) => {
+            const text = new TextDecoder().decode(e.target.value);
+            log('ESP32 Notify: ' + text);
+            handleEsp32Notify(text);
+          });
+          log('✅ Đã đăng ký nhận Telemetry Notify.');
+        } catch (err) {
+          log('Thông báo: Không thể bật Notify: ' + err.message);
+        }
 
-// --- BLUETOOTH CONNECTION ---
-document.getElementById('btnConnectBle').addEventListener('click', async () => {
-  try {
-    log('Đang quét Bluetooth tìm CarLED-Ambient...');
-    bleDevice = await navigator.bluetooth.requestDevice({
-      filters: [{ name: 'CarLED-Ambient' }],
-      optionalServices: [SERVICE_UUID]
+        document.getElementById('bleBadge').className = 'badge badge-on';
+        document.getElementById('bleBadge').innerText = 'Đã kết nối';
+        document.getElementById('bleDeviceName').innerText = bleDevice.name || 'CarLED-Ambient';
+        document.getElementById('btnConnectBle').style.display = 'none';
+        document.getElementById('btnDisconnectBle').style.display = 'inline-block';
+        document.getElementById('btnUploadBle').disabled = false;
+        document.getElementById('btnSendWifiBle').disabled = false;
+
+        log('🎉 KẾT NỐI BLUETOOTH THÀNH CÔNG!');
+      } catch (err) {
+        log('Lỗi kết nối BLE: ' + err.message);
+      }
     });
 
-    bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
-    log('Đang kết nối GATT server...');
-    const server = await bleDevice.gatt.connect();
+    document.getElementById('btnDisconnectBle').addEventListener('click', () => {
+      if (bleDevice && bleDevice.gatt.connected) {
+        bleDevice.gatt.disconnect();
+      }
+    });
 
-    log('Đang khám phá LED Service...');
-    const service = await server.getPrimaryService(SERVICE_UUID);
-
-    writeCharacteristic = await service.getCharacteristic(WRITE_CHAR_UUID);
-    log('✅ Đã kết nối Control Characteristic!');
-
-    try {
-      statusCharacteristic = await service.getCharacteristic(STATUS_CHAR_UUID);
-      await statusCharacteristic.startNotifications();
-      statusCharacteristic.addEventListener('characteristicvaluechanged', (e) => {
-        const text = new TextDecoder().decode(e.target.value);
-        log('ESP32 Notify: ' + text);
-        handleEsp32Notify(text);
-      });
-      log('✅ Đã đăng ký nhận Telemetry Notify.');
-    } catch(err) {
-      log('Thông báo: Không thể bật Notify: ' + err.message);
+    function onDisconnected() {
+      document.getElementById('bleBadge').className = 'badge badge-off';
+      document.getElementById('bleBadge').innerText = 'Chưa kết nối';
+      document.getElementById('btnConnectBle').style.display = 'inline-block';
+      document.getElementById('btnDisconnectBle').style.display = 'none';
+      document.getElementById('btnUploadBle').disabled = true;
+      document.getElementById('btnSendWifiBle').disabled = true;
+      writeCharacteristic = null;
+      statusCharacteristic = null;
+      log('Thiết bị Bluetooth đã ngắt kết nối.');
     }
 
-    document.getElementById('bleBadge').className = 'badge badge-on';
-    document.getElementById('bleBadge').innerText = 'Đã kết nối';
-    document.getElementById('bleDeviceName').innerText = bleDevice.name || 'CarLED-Ambient';
-    document.getElementById('btnConnectBle').style.display = 'none';
-    document.getElementById('btnDisconnectBle').style.display = 'inline-block';
-    document.getElementById('btnUploadBle').disabled = false;
-    document.getElementById('btnSendWifiBle').disabled = false;
-
-    log('🎉 KẾT NỐI BLUETOOTH THÀNH CÔNG!');
-  } catch(err) {
-    log('Lỗi kết nối BLE: ' + err.message);
-  }
-});
-
-document.getElementById('btnDisconnectBle').addEventListener('click', () => {
-  if (bleDevice && bleDevice.gatt.connected) {
-    bleDevice.gatt.disconnect();
-  }
-});
-
-function onDisconnected() {
-  document.getElementById('bleBadge').className = 'badge badge-off';
-  document.getElementById('bleBadge').innerText = 'Chưa kết nối';
-  document.getElementById('btnConnectBle').style.display = 'inline-block';
-  document.getElementById('btnDisconnectBle').style.display = 'none';
-  document.getElementById('btnUploadBle').disabled = true;
-  document.getElementById('btnSendWifiBle').disabled = true;
-  writeCharacteristic = null;
-  statusCharacteristic = null;
-  log('Thiết bị Bluetooth đã ngắt kết nối.');
-}
-
-function handleEsp32Notify(jsonStr) {
-  try {
-    const data = JSON.parse(jsonStr);
-    if (data.event === 'wifi_connected' && data.ip) {
-      document.getElementById('wifiIpDisplay').style.display = 'block';
-      document.getElementById('wifiIpText').innerText = '✅ ESP32 đã kết nối Wi-Fi! IP: ' + data.ip;
-      const portalBtn = document.getElementById('btnOpenWebPortal');
-      portalBtn.href = 'http://' + data.ip;
-      portalBtn.innerText = '🌐 Mở Web Portal (' + data.ip + ')';
+    function handleEsp32Notify(jsonStr) {
+      try {
+        const data = JSON.parse(jsonStr);
+        if (data.event === 'wifi_connected' && data.ip) {
+          document.getElementById('wifiIpDisplay').style.display = 'block';
+          document.getElementById('wifiIpText').innerText = '✅ ESP32 đã kết nối Wi-Fi! IP: ' + data.ip;
+          const portalBtn = document.getElementById('btnOpenWebPortal');
+          portalBtn.href = 'http://' + data.ip;
+          portalBtn.innerText = '🌐 Mở Web Portal (' + data.ip + ')';
+        }
+      } catch (e) { }
     }
-  } catch(e) {}
-}
 
-// --- REAL-TIME LED CONTROLS (OPCODES 0x01 - 0x06) ---
-let isPowerOn = true;
-document.getElementById('btnPowerToggle').addEventListener('click', () => {
-  isPowerOn = !isPowerOn;
-  const btn = document.getElementById('btnPowerToggle');
-  btn.className = isPowerOn ? 'btn-sm btn-success' : 'btn-sm btn-danger';
-  btn.innerText = isPowerOn ? 'Bật Nguồn' : 'Tắt Nguồn';
-  // Opcode 0x01: Power
-  sendThrottledBle(buildFrame(0x01, isPowerOn ? 1 : 0), true);
-  log(`Lệnh BLE: Power -> ${isPowerOn ? 'ON' : 'OFF'}`);
-});
+    // --- REAL-TIME LED CONTROLS (OPCODES 0x01 - 0x06) ---
+    let isPowerOn = true;
+    document.getElementById('btnPowerToggle').addEventListener('click', () => {
+      isPowerOn = !isPowerOn;
+      const btn = document.getElementById('btnPowerToggle');
+      btn.className = isPowerOn ? 'btn-sm btn-success' : 'btn-sm btn-danger';
+      btn.innerText = isPowerOn ? 'Bật Nguồn' : 'Tắt Nguồn';
+      // Opcode 0x01: Power
+      sendThrottledBle(buildFrame(0x01, isPowerOn ? 1 : 0), true);
+      log(`Lệnh BLE: Power -> ${isPowerOn ? 'ON' : 'OFF'}`);
+    });
 
-document.getElementById('matrixBriSlider').addEventListener('input', (e) => {
-  const v = parseInt(e.target.value);
-  document.getElementById('matrixBriVal').innerText = v;
-  // Opcode 0x02: Brightness
-  sendThrottledBle(buildFrame(0x02, v));
-});
+    document.getElementById('matrixBriSlider').addEventListener('input', (e) => {
+      const v = parseInt(e.target.value);
+      document.getElementById('matrixBriVal').innerText = v;
+      // Opcode 0x02: Brightness
+      sendThrottledBle(buildFrame(0x02, v));
+    });
 
-document.getElementById('matrixSpeedSlider').addEventListener('input', (e) => {
-  const v = parseInt(e.target.value);
-  document.getElementById('matrixSpeedVal').innerText = v;
-  // Opcode 0x03: Speed
-  sendThrottledBle(buildFrame(0x03, v));
-});
+    document.getElementById('matrixSpeedSlider').addEventListener('input', (e) => {
+      const v = parseInt(e.target.value);
+      document.getElementById('matrixSpeedVal').innerText = v;
+      // Opcode 0x03: Speed
+      sendThrottledBle(buildFrame(0x03, v));
+    });
 
-document.getElementById('matrixMicSlider').addEventListener('input', (e) => {
-  const v = parseInt(e.target.value);
-  document.getElementById('matrixMicVal').innerText = v;
-  // Opcode 0x06: Mic Sensitivity
-  sendThrottledBle(buildFrame(0x06, v));
-});
+    document.getElementById('matrixMicSlider').addEventListener('input', (e) => {
+      const v = parseInt(e.target.value);
+      document.getElementById('matrixMicVal').innerText = v;
+      // Opcode 0x06: Mic Sensitivity
+      sendThrottledBle(buildFrame(0x06, v));
+    });
 
-function setModeBle(modeId) {
-  // Opcode 0x04: Mode
-  sendThrottledBle(buildFrame(0x04, modeId), true);
-  log(`Lệnh BLE: Chuyển sang Mode ${modeId}`);
-  document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-  if (event && event.target) event.target.classList.add('active');
-}
-
-function pickColor(r, g, b) {
-  // Opcode 0x05: Set RGB Color
-  sendThrottledBle(buildFrame(0x05, r, g, b), true);
-  const hex = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-  document.getElementById('rgbColorPicker').value = hex;
-  document.getElementById('rgbHexLabel').innerText = `Màu: ${hex} (R:${r}, G:${g}, B:${b})`;
-  log(`Lệnh BLE: RGB Color -> (${r}, ${g}, ${b})`);
-}
-
-document.getElementById('rgbColorPicker').addEventListener('input', (e) => {
-  const hex = e.target.value;
-  const r = parseInt(hex.substr(1,2), 16);
-  const g = parseInt(hex.substr(3,2), 16);
-  const b = parseInt(hex.substr(5,2), 16);
-  document.getElementById('rgbHexLabel').innerText = `Màu: ${hex} (R:${r}, G:${g}, B:${b})`;
-  sendThrottledBle(buildFrame(0x05, r, g, b));
-});
-
-// --- FLOW 2: IMAGE IMPORTER (OPCODES 0x10, 0x11, 0x12) ---
-const canvas = document.getElementById('previewCanvas');
-const ctx = canvas.getContext('2d');
-let loadedImg = null;
-
-ctx.fillStyle = '#0a0d18';
-ctx.fillRect(0,0,64,32);
-ctx.fillStyle = '#00d2ff';
-ctx.font = 'bold 7px sans-serif';
-ctx.fillText('CAR LED 64x32', 8, 18);
-
-document.getElementById('imageInput').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  document.getElementById('fileBtnLabel').innerText = '📁 ' + file.name;
-  const reader = new FileReader();
-  reader.onload = (evt) => {
-    loadedImg = new Image();
-    loadedImg.onload = renderPreview;
-    loadedImg.src = evt.target.result;
-  };
-  reader.readAsDataURL(file);
-});
-
-document.getElementById('briSlider').addEventListener('input', (e) => {
-  document.getElementById('briVal').innerText = e.target.value + '%';
-  renderPreview();
-});
-document.getElementById('conSlider').addEventListener('input', (e) => {
-  document.getElementById('conVal').innerText = e.target.value + '%';
-  renderPreview();
-});
-document.getElementById('fitMode').addEventListener('change', renderPreview);
-document.getElementById('ditherMode').addEventListener('change', renderPreview);
-
-function renderPreview() {
-  if (!loadedImg) return;
-  const fit = document.getElementById('fitMode').value;
-  const bri = document.getElementById('briSlider').value / 100;
-  const con = document.getElementById('conSlider').value / 100;
-  const dither = document.getElementById('ditherMode').value;
-
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, 64, 32);
-
-  if (fit === 'stretch') {
-    ctx.drawImage(loadedImg, 0, 0, 64, 32);
-  } else if (fit === 'contain') {
-    const scale = Math.min(64 / loadedImg.width, 32 / loadedImg.height);
-    const nw = loadedImg.width * scale;
-    const nh = loadedImg.height * scale;
-    ctx.drawImage(loadedImg, (64 - nw)/2, (32 - nh)/2, nw, nh);
-  } else {
-    const scale = Math.max(64 / loadedImg.width, 32 / loadedImg.height);
-    const nw = loadedImg.width * scale;
-    const nh = loadedImg.height * scale;
-    ctx.drawImage(loadedImg, (64 - nw)/2, (32 - nh)/2, nw, nh);
-  }
-
-  const imgData = ctx.getImageData(0, 0, 64, 32);
-  const d = imgData.data;
-
-  for (let i = 0; i < d.length; i += 4) {
-    for (let c = 0; c < 3; c++) {
-      let v = d[i + c];
-      v = ((v - 128) * con + 128) * bri;
-      d[i + c] = Math.max(0, Math.min(255, v));
+    function setModeBle(modeId) {
+      // Opcode 0x04: Mode
+      sendThrottledBle(buildFrame(0x04, modeId), true);
+      log(`Lệnh BLE: Chuyển sang Mode ${modeId}`);
+      document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
     }
-  }
 
-  if (dither === 'floyd') applyFloydSteinberg(imgData);
-  ctx.putImageData(imgData, 0, 0);
-}
+    function pickColor(r, g, b) {
+      // Opcode 0x05: Set RGB Color
+      sendThrottledBle(buildFrame(0x05, r, g, b), true);
+      const hex = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+      document.getElementById('rgbColorPicker').value = hex;
+      document.getElementById('rgbHexLabel').innerText = `Màu: ${hex} (R:${r}, G:${g}, B:${b})`;
+      log(`Lệnh BLE: RGB Color -> (${r}, ${g}, ${b})`);
+    }
 
-function applyFloydSteinberg(imgData) {
-  const w = 64, h = 32, d = imgData.data;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const idx = (y * w + x) * 4;
-      const oldR = d[idx], oldG = d[idx+1], oldB = d[idx+2];
-      const newR = Math.round(oldR / 255 * 31) * (255 / 31);
-      const newG = Math.round(oldG / 255 * 63) * (255 / 63);
-      const newB = Math.round(oldB / 255 * 31) * (255 / 31);
-      d[idx] = newR; d[idx+1] = newG; d[idx+2] = newB;
-      const errR = oldR - newR, errG = oldG - newG, errB = oldB - newB;
-      function distribute(nx, ny, f) {
-        if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-          const nIdx = (ny * w + nx) * 4;
-          d[nIdx] = Math.min(255, Math.max(0, d[nIdx] + errR * f));
-          d[nIdx+1] = Math.min(255, Math.max(0, d[nIdx+1] + errG * f));
-          d[nIdx+2] = Math.min(255, Math.max(0, d[nIdx+2] + errB * f));
+    document.getElementById('rgbColorPicker').addEventListener('input', (e) => {
+      const hex = e.target.value;
+      const r = parseInt(hex.substr(1, 2), 16);
+      const g = parseInt(hex.substr(3, 2), 16);
+      const b = parseInt(hex.substr(5, 2), 16);
+      document.getElementById('rgbHexLabel').innerText = `Màu: ${hex} (R:${r}, G:${g}, B:${b})`;
+      sendThrottledBle(buildFrame(0x05, r, g, b));
+    });
+
+    // --- FLOW 2: IMAGE IMPORTER (OPCODES 0x10, 0x11, 0x12) ---
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    let loadedImg = null;
+
+    ctx.fillStyle = '#0a0d18';
+    ctx.fillRect(0, 0, 64, 32);
+    ctx.fillStyle = '#00d2ff';
+    ctx.font = 'bold 7px sans-serif';
+    ctx.fillText('CAR LED 64x32', 8, 18);
+
+    document.getElementById('imageInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      document.getElementById('fileBtnLabel').innerText = '📁 ' + file.name;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        loadedImg = new Image();
+        loadedImg.onload = renderPreview;
+        loadedImg.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('briSlider').addEventListener('input', (e) => {
+      document.getElementById('briVal').innerText = e.target.value + '%';
+      renderPreview();
+    });
+    document.getElementById('conSlider').addEventListener('input', (e) => {
+      document.getElementById('conVal').innerText = e.target.value + '%';
+      renderPreview();
+    });
+    document.getElementById('fitMode').addEventListener('change', renderPreview);
+    document.getElementById('ditherMode').addEventListener('change', renderPreview);
+
+    function renderPreview() {
+      if (!loadedImg) return;
+      const fit = document.getElementById('fitMode').value;
+      const bri = document.getElementById('briSlider').value / 100;
+      const con = document.getElementById('conSlider').value / 100;
+      const dither = document.getElementById('ditherMode').value;
+
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, 64, 32);
+
+      if (fit === 'stretch') {
+        ctx.drawImage(loadedImg, 0, 0, 64, 32);
+      } else if (fit === 'contain') {
+        const scale = Math.min(64 / loadedImg.width, 32 / loadedImg.height);
+        const nw = loadedImg.width * scale;
+        const nh = loadedImg.height * scale;
+        ctx.drawImage(loadedImg, (64 - nw) / 2, (32 - nh) / 2, nw, nh);
+      } else {
+        const scale = Math.max(64 / loadedImg.width, 32 / loadedImg.height);
+        const nw = loadedImg.width * scale;
+        const nh = loadedImg.height * scale;
+        ctx.drawImage(loadedImg, (64 - nw) / 2, (32 - nh) / 2, nw, nh);
+      }
+
+      const imgData = ctx.getImageData(0, 0, 64, 32);
+      const d = imgData.data;
+
+      for (let i = 0; i < d.length; i += 4) {
+        for (let c = 0; c < 3; c++) {
+          let v = d[i + c];
+          v = ((v - 128) * con + 128) * bri;
+          d[i + c] = Math.max(0, Math.min(255, v));
         }
       }
-      distribute(x + 1, y, 7 / 16);
-      distribute(x - 1, y + 1, 3 / 16);
-      distribute(x, y + 1, 5 / 16);
-      distribute(x + 1, y + 1, 1 / 16);
-    }
-  }
-}
 
-function getRgb565Bytes() {
-  const imgData = ctx.getImageData(0, 0, 64, 32).data;
-  const bytes = new Uint8Array(64 * 32 * 2);
-  let idx = 0;
-  for (let i = 0; i < imgData.length; i += 4) {
-    let r = imgData[i], g = imgData[i + 1], b = imgData[i + 2];
-    let col565 = (((r >> 3) & 0x1F) << 11) | (((g >> 2) & 0x3F) << 5) | ((b >> 3) & 0x1F);
-    bytes[idx++] = col565 & 0xFF;
-    bytes[idx++] = (col565 >> 8) & 0xFF;
-  }
-  return bytes;
-}
-
-document.getElementById('btnUploadBle').addEventListener('click', async () => {
-  if (!writeCharacteristic) return alert('Chưa kết nối BLE!');
-  const toast = document.getElementById('uploadToast');
-  const progWrap = document.getElementById('uploadProgress');
-  const progFill = document.getElementById('uploadProgressFill');
-
-  toast.style.display = 'block';
-  toast.className = 'status-toast status-info';
-  toast.innerText = 'Đang bắt đầu nạp ảnh qua BLE...';
-  progWrap.style.display = 'block';
-  progFill.style.width = '0%';
-
-  try {
-    const rawData = getRgb565Bytes();
-    log(`Bắt đầu upload ảnh RGB565: ${rawData.length} bytes...`);
-
-    // 1. Send PROJECTION_START (Opcode 0x10)
-    const startFrame = new Uint8Array([0xAA, 0x10, 0x01, 0x40, 0x20, 0x00, 0xC8, 0x55]);
-    await writeCharacteristic.writeValueWithoutResponse(startFrame);
-    await new Promise(r => setTimeout(r, 60));
-
-    // 2. Send CHUNKS (Opcode 0x11)
-    const CHUNK_SIZE = 128;
-    const totalChunks = Math.ceil(rawData.length / CHUNK_SIZE);
-
-    for (let c = 0; c < totalChunks; c++) {
-      const offset = c * CHUNK_SIZE;
-      const slice = rawData.slice(offset, Math.min(offset + CHUNK_SIZE, rawData.length));
-      const dataLen = slice.length;
-
-      const chunkFrame = new Uint8Array(5 + dataLen + 1);
-      chunkFrame[0] = 0xAA;
-      chunkFrame[1] = 0x11;
-      chunkFrame[2] = (c >> 8) & 0xFF;
-      chunkFrame[3] = c & 0xFF;
-      chunkFrame[4] = dataLen;
-      chunkFrame.set(slice, 5);
-      chunkFrame[5 + dataLen] = 0x55;
-
-      await writeCharacteristic.writeValueWithoutResponse(chunkFrame);
-      await new Promise(r => setTimeout(r, 25));
-
-      const pct = Math.round(((c + 1) / totalChunks) * 100);
-      progFill.style.width = pct + '%';
-      toast.innerText = `Đang nạp ảnh: ${pct}% (${c + 1}/${totalChunks} gói)...`;
+      if (dither === 'floyd') applyFloydSteinberg(imgData);
+      ctx.putImageData(imgData, 0, 0);
     }
 
-    // 3. Send PROJECTION_FINISH (Opcode 0x12, activate = 1)
-    const finishFrame = new Uint8Array([0xAA, 0x12, 0x01, 0x00, 0x00, 0x55]);
-    await writeCharacteristic.writeValueWithoutResponse(finishFrame);
+    function applyFloydSteinberg(imgData) {
+      const w = 64, h = 32, d = imgData.data;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          const oldR = d[idx], oldG = d[idx + 1], oldB = d[idx + 2];
+          const newR = Math.round(oldR / 255 * 31) * (255 / 31);
+          const newG = Math.round(oldG / 255 * 63) * (255 / 63);
+          const newB = Math.round(oldB / 255 * 31) * (255 / 31);
+          d[idx] = newR; d[idx + 1] = newG; d[idx + 2] = newB;
+          const errR = oldR - newR, errG = oldG - newG, errB = oldB - newB;
+          function distribute(nx, ny, f) {
+            if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+              const nIdx = (ny * w + nx) * 4;
+              d[nIdx] = Math.min(255, Math.max(0, d[nIdx] + errR * f));
+              d[nIdx + 1] = Math.min(255, Math.max(0, d[nIdx + 1] + errG * f));
+              d[nIdx + 2] = Math.min(255, Math.max(0, d[nIdx + 2] + errB * f));
+            }
+          }
+          distribute(x + 1, y, 7 / 16);
+          distribute(x - 1, y + 1, 3 / 16);
+          distribute(x, y + 1, 5 / 16);
+          distribute(x + 1, y + 1, 1 / 16);
+        }
+      }
+    }
 
-    toast.className = 'status-toast status-ok';
-    toast.innerText = '✅ ĐÃ CHIẾU ẢNH LÊN BẢNG LED THÀNH CÔNG!';
-    log('✅ Upload BLE Flow 2 hoàn tất!');
-  } catch(err) {
-    toast.className = 'status-toast status-err';
-    toast.innerText = '❌ Lỗi nạp BLE: ' + err.message;
-    log('Lỗi upload BLE: ' + err.message);
-  }
-});
+    function getRgb565Bytes() {
+      const imgData = ctx.getImageData(0, 0, 64, 32).data;
+      const bytes = new Uint8Array(64 * 32 * 2);
+      let idx = 0;
+      for (let i = 0; i < imgData.length; i += 4) {
+        let r = imgData[i], g = imgData[i + 1], b = imgData[i + 2];
+        let col565 = (((r >> 3) & 0x1F) << 11) | (((g >> 2) & 0x3F) << 5) | ((b >> 3) & 0x1F);
+        bytes[idx++] = col565 & 0xFF;
+        bytes[idx++] = (col565 >> 8) & 0xFF;
+      }
+      return bytes;
+    }
 
-// --- TAB 3: LIVE INTERACTIVE CANVAS (OPCODES 0x13 & 0x14) ---
-const lCanvas = document.getElementById('liveCanvas');
-const lCtx = lCanvas.getContext('2d');
-let isDrawing = false;
-let drawColor = { r: 0, g: 210, b: 255 };
-let strokeBuffer = [];
+    document.getElementById('btnUploadBle').addEventListener('click', async () => {
+      if (!writeCharacteristic) return alert('Chưa kết nối BLE!');
+      const toast = document.getElementById('uploadToast');
+      const progWrap = document.getElementById('uploadProgress');
+      const progFill = document.getElementById('uploadProgressFill');
 
-// Init black background
-lCtx.fillStyle = '#000';
-lCtx.fillRect(0,0,64,32);
+      toast.style.display = 'block';
+      toast.className = 'status-toast status-info';
+      toast.innerText = 'Đang bắt đầu nạp ảnh qua BLE...';
+      progWrap.style.display = 'block';
+      progFill.style.width = '0%';
 
-function setDrawColor(r, g, b, el) {
-  drawColor = { r, g, b };
-  document.querySelectorAll('#tab-canvas .color-chip').forEach(c => c.classList.remove('active'));
-  if (el) el.classList.add('active');
-}
+      try {
+        const rawData = getRgb565Bytes();
+        log(`Bắt đầu upload ảnh RGB565: ${rawData.length} bytes...`);
 
-function clearLiveCanvas() {
-  lCtx.fillStyle = '#000';
-  lCtx.fillRect(0,0,64,32);
-  strokeBuffer = [];
-  if (writeCharacteristic) {
-    sendThrottledBle(buildFrame(0x15, 0, 0, 0), true);
-    log('🎨 Đã chuyển bảng LED về màn hình đen tuyền (Opcode 0x15).');
-  } else {
-    log('Đã xóa bảng vẽ về đen.');
-  }
-}
+        // 1. Send PROJECTION_START (Opcode 0x10)
+        const startFrame = new Uint8Array([0xAA, 0x10, 0x01, 0x40, 0x20, 0x00, 0xC8, 0x55]);
+        await writeCharacteristic.writeValueWithoutResponse(startFrame);
+        await new Promise(r => setTimeout(r, 60));
 
-function getCanvasCoords(e) {
-  const rect = lCanvas.getBoundingClientRect();
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-  const x = Math.floor((clientX - rect.left) / rect.width * 64);
-  const y = Math.floor((clientY - rect.top) / rect.height * 32);
-  return { x: Math.max(0, Math.min(63, x)), y: Math.max(0, Math.min(31, y)) };
-}
+        // 2. Send CHUNKS (Opcode 0x11)
+        const CHUNK_SIZE = 128;
+        const totalChunks = Math.ceil(rawData.length / CHUNK_SIZE);
 
-function drawPixelLocal(x, y) {
-  lCtx.fillStyle = `rgb(${drawColor.r}, ${drawColor.g}, ${drawColor.b})`;
-  lCtx.fillRect(x, y, 1, 1);
-  strokeBuffer.push({ x, y, r: drawColor.r, g: drawColor.g, b: drawColor.b });
-}
+        for (let c = 0; c < totalChunks; c++) {
+          const offset = c * CHUNK_SIZE;
+          const slice = rawData.slice(offset, Math.min(offset + CHUNK_SIZE, rawData.length));
+          const dataLen = slice.length;
 
-// Periodic Batch Flush to BLE (Opcode 0x14) every 35ms
-setInterval(() => {
-  if (strokeBuffer.length === 0 || !writeCharacteristic) return;
-  const batch = strokeBuffer.splice(0, 12); // Send up to 12 points per packet
-  const count = batch.length;
-  // Frame: [0xAA, 0x14, count, <x, y, r, g, b> * count, checksum, 0x55]
-  const frame = new Uint8Array(3 + count * 5 + 2);
-  frame[0] = 0xAA;
-  frame[1] = 0x14;
-  frame[2] = count;
-  let csum = 0x14 ^ count;
-  for (let i = 0; i < count; i++) {
-    const pt = batch[i];
-    const off = 3 + i * 5;
-    frame[off] = pt.x;
-    frame[off+1] = pt.y;
-    frame[off+2] = pt.r;
-    frame[off+3] = pt.g;
-    frame[off+4] = pt.b;
-    for (let k = 0; k < 5; k++) csum ^= frame[off+k];
-  }
-  frame[3 + count * 5] = csum & 0xFF;
-  frame[3 + count * 5 + 1] = 0x55;
-  writeCharacteristic.writeValueWithoutResponse(frame).catch(()=>{});
-}, 35);
+          const chunkFrame = new Uint8Array(5 + dataLen + 1);
+          chunkFrame[0] = 0xAA;
+          chunkFrame[1] = 0x11;
+          chunkFrame[2] = (c >> 8) & 0xFF;
+          chunkFrame[3] = c & 0xFF;
+          chunkFrame[4] = dataLen;
+          chunkFrame.set(slice, 5);
+          chunkFrame[5 + dataLen] = 0x55;
 
-lCanvas.addEventListener('mousedown', (e) => { isDrawing = true; const p = getCanvasCoords(e); drawPixelLocal(p.x, p.y); });
-lCanvas.addEventListener('mousemove', (e) => { if (isDrawing) { const p = getCanvasCoords(e); drawPixelLocal(p.x, p.y); } });
-window.addEventListener('mouseup', () => { isDrawing = false; });
+          await writeCharacteristic.writeValueWithoutResponse(chunkFrame);
+          await new Promise(r => setTimeout(r, 25));
 
-lCanvas.addEventListener('touchstart', (e) => { isDrawing = true; const p = getCanvasCoords(e); drawPixelLocal(p.x, p.y); e.preventDefault(); }, {passive:false});
-lCanvas.addEventListener('touchmove', (e) => { if (isDrawing) { const p = getCanvasCoords(e); drawPixelLocal(p.x, p.y); } e.preventDefault(); }, {passive:false});
-window.addEventListener('touchend', () => { isDrawing = false; });
+          const pct = Math.round(((c + 1) / totalChunks) * 100);
+          progFill.style.width = pct + '%';
+          toast.innerText = `Đang nạp ảnh: ${pct}% (${c + 1}/${totalChunks} gói)...`;
+        }
 
-// --- TAB 4: WI-FI PROVISIONING (JSON via BLE) ---
-  document.getElementById('btnSendWifiBle').addEventListener('click', async () => {
-  const ssid = document.getElementById('wifiSsid').value.trim();
-  const pass = document.getElementById('wifiPass').value.trim();
-  if (!ssid) return alert('Vui lòng nhập tên Wi-Fi (SSID)');
+        // 3. Send PROJECTION_FINISH (Opcode 0x12, activate = 1)
+        const finishFrame = new Uint8Array([0xAA, 0x12, 0x01, 0x00, 0x00, 0x55]);
+        await writeCharacteristic.writeValueWithoutResponse(finishFrame);
 
-  try {
-    const payload = JSON.stringify({ command: 'wifi_config', ssid: ssid, password: pass }) + '\n';
-    log('Gửi Wi-Fi config qua BLE: ' + payload);
-    const bytes = new TextEncoder().encode(payload);
-    await writeCharacteristic.writeValueWithoutResponse(bytes);
-    alert('Đã gửi thông tin Wi-Fi. ESP32 đang kết nối vào: ' + ssid + '...');
-  } catch(err) {
-    alert('Lỗi gửi Wi-Fi qua BLE: ' + err.message);
-  }
-});
-</script>
+        toast.className = 'status-toast status-ok';
+        toast.innerText = '✅ ĐÃ CHIẾU ẢNH LÊN BẢNG LED THÀNH CÔNG!';
+        log('✅ Upload BLE Flow 2 hoàn tất!');
+      } catch (err) {
+        toast.className = 'status-toast status-err';
+        toast.innerText = '❌ Lỗi nạp BLE: ' + err.message;
+        log('Lỗi upload BLE: ' + err.message);
+      }
+    });
+
+    // --- TAB 3: LIVE INTERACTIVE CANVAS (OPCODES 0x13 & 0x14) ---
+    const lCanvas = document.getElementById('liveCanvas');
+    const lCtx = lCanvas.getContext('2d');
+    let isDrawing = false;
+    let drawColor = { r: 0, g: 210, b: 255 };
+    let strokeBuffer = [];
+
+    // Init black background
+    lCtx.fillStyle = '#000';
+    lCtx.fillRect(0, 0, 64, 32);
+
+    function setDrawColor(r, g, b, el) {
+      drawColor = { r, g, b };
+      document.querySelectorAll('#tab-canvas .color-chip').forEach(c => c.classList.remove('active'));
+      if (el) el.classList.add('active');
+    }
+
+    function clearLiveCanvas() {
+      lCtx.fillStyle = '#000';
+      lCtx.fillRect(0, 0, 64, 32);
+      strokeBuffer = [];
+      if (writeCharacteristic) {
+        sendThrottledBle(buildFrame(0x15, 0, 0, 0), true);
+        log('🎨 Đã chuyển bảng LED về màn hình đen tuyền (Opcode 0x15).');
+      } else {
+        log('Đã xóa bảng vẽ về đen.');
+      }
+    }
+
+    function getCanvasCoords(e) {
+      const rect = lCanvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = Math.floor((clientX - rect.left) / rect.width * 64);
+      const y = Math.floor((clientY - rect.top) / rect.height * 32);
+      return { x: Math.max(0, Math.min(63, x)), y: Math.max(0, Math.min(31, y)) };
+    }
+
+    function drawPixelLocal(x, y) {
+      lCtx.fillStyle = `rgb(${drawColor.r}, ${drawColor.g}, ${drawColor.b})`;
+      lCtx.fillRect(x, y, 1, 1);
+      strokeBuffer.push({ x, y, r: drawColor.r, g: drawColor.g, b: drawColor.b });
+    }
+
+    // Periodic Batch Flush to BLE (Opcode 0x14) every 35ms
+    setInterval(() => {
+      if (strokeBuffer.length === 0 || !writeCharacteristic) return;
+      const batch = strokeBuffer.splice(0, 12); // Send up to 12 points per packet
+      const count = batch.length;
+      // Frame: [0xAA, 0x14, count, <x, y, r, g, b> * count, checksum, 0x55]
+      const frame = new Uint8Array(3 + count * 5 + 2);
+      frame[0] = 0xAA;
+      frame[1] = 0x14;
+      frame[2] = count;
+      let csum = 0x14 ^ count;
+      for (let i = 0; i < count; i++) {
+        const pt = batch[i];
+        const off = 3 + i * 5;
+        frame[off] = pt.x;
+        frame[off + 1] = pt.y;
+        frame[off + 2] = pt.r;
+        frame[off + 3] = pt.g;
+        frame[off + 4] = pt.b;
+        for (let k = 0; k < 5; k++) csum ^= frame[off + k];
+      }
+      frame[3 + count * 5] = csum & 0xFF;
+      frame[3 + count * 5 + 1] = 0x55;
+      writeCharacteristic.writeValueWithoutResponse(frame).catch(() => { });
+    }, 35);
+
+    lCanvas.addEventListener('mousedown', (e) => { isDrawing = true; const p = getCanvasCoords(e); drawPixelLocal(p.x, p.y); });
+    lCanvas.addEventListener('mousemove', (e) => { if (isDrawing) { const p = getCanvasCoords(e); drawPixelLocal(p.x, p.y); } });
+    window.addEventListener('mouseup', () => { isDrawing = false; });
+
+    lCanvas.addEventListener('touchstart', (e) => { isDrawing = true; const p = getCanvasCoords(e); drawPixelLocal(p.x, p.y); e.preventDefault(); }, { passive: false });
+    lCanvas.addEventListener('touchmove', (e) => { if (isDrawing) { const p = getCanvasCoords(e); drawPixelLocal(p.x, p.y); } e.preventDefault(); }, { passive: false });
+    window.addEventListener('touchend', () => { isDrawing = false; });
+
+    // --- TAB 4: WI-FI PROVISIONING (JSON via BLE) ---
+    document.getElementById('btnSendWifiBle').addEventListener('click', async () => {
+      const ssid = document.getElementById('wifiSsid').value.trim();
+      const pass = document.getElementById('wifiPass').value.trim();
+      if (!ssid) return alert('Vui lòng nhập tên Wi-Fi (SSID)');
+
+      try {
+        const payload = JSON.stringify({ command: 'wifi_config', ssid: ssid, password: pass }) + '\n';
+        log('Gửi Wi-Fi config qua BLE: ' + payload);
+        const bytes = new TextEncoder().encode(payload);
+        await writeCharacteristic.writeValueWithoutResponse(bytes);
+        alert('Đã gửi thông tin Wi-Fi. ESP32 đang kết nối vào: ' + ssid + '...');
+      } catch (err) {
+        alert('Lỗi gửi Wi-Fi qua BLE: ' + err.message);
+      }
+    });
+  </script>
 </body>
+
 </html>
