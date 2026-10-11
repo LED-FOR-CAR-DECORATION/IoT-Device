@@ -5,7 +5,8 @@
 #define TAG "PROJECTION"
 
 CustomProjectionEffect::CustomProjectionEffect()
-    : currentFrameIndex(0), lastFrameTick(0), hasValidPattern(false), isLiveDrawingActive(false) {
+    : currentFrameIndex(0), lastFrameTick(0), hasValidPattern(false), isLiveDrawingActive(false),
+      lastRenderedFrameIndex(-1), needsRedraw(true) {
     frameMutex = xSemaphoreCreateMutex();
 }
 
@@ -19,13 +20,11 @@ void CustomProjectionEffect::init() {
     currentFrameIndex = 0;
     lastFrameTick = millis();
 
-    // Preserve blank canvas if live drawing mode is active
-    if (isLiveDrawingActive) {
-        return;
-    }
-
-    if (!loadFromFlash(DEFAULT_PATTERN_PATH)) {
-        LOG_W(TAG, "No default pattern found in SPIFFS flash");
+    // Reload saved pattern from flash if uninitialized or if returning from live drawing
+    if (!hasValidPattern || isLiveDrawingActive) {
+        if (!loadFromFlash(DEFAULT_PATTERN_PATH)) {
+            LOG_W(TAG, "No default pattern found in SPIFFS flash");
+        }
     }
 }
 
@@ -70,6 +69,8 @@ bool CustomProjectionEffect::setFrames(const ProjectionHeader& header, const uin
         lastFrameTick = millis();
         hasValidPattern = true;
         isLiveDrawingActive = false;
+        lastRenderedFrameIndex = -1;
+        needsRedraw = true;
         xSemaphoreGive(frameMutex);
 
         LOG_I(TAG, "Loaded %d projection frame(s) [%dx%d, delay: %dms]",
@@ -121,6 +122,8 @@ void CustomProjectionEffect::resetToBlankCanvas() {
         currentFrameIndex = 0;
         hasValidPattern = true;
         isLiveDrawingActive = true;
+        lastRenderedFrameIndex = -1;
+        needsRedraw = true;
         xSemaphoreGive(frameMutex);
     }
     LedDriver::getInstance().clear();
@@ -132,6 +135,8 @@ void CustomProjectionEffect::clearFrames() {
         hasValidPattern = false;
         isLiveDrawingActive = false;
         currentFrameIndex = 0;
+        lastRenderedFrameIndex = -1;
+        needsRedraw = true;
         xSemaphoreGive(frameMutex);
     }
 }
@@ -158,15 +163,22 @@ void CustomProjectionEffect::update(const DeviceSettings& settings) {
             if (millis() - lastFrameTick >= delayMs) {
                 currentFrameIndex = (currentFrameIndex + 1) % currentHeader.frameCount;
                 lastFrameTick = millis();
+                needsRedraw = true;
             }
         }
 
-        const size_t framePixels = currentHeader.width * currentHeader.height;
-        const size_t frameOffset = currentFrameIndex * framePixels;
+        // Only redraw to DMA buffer when frame actually changes or on explicit redraw request.
+        // This completely eliminates continuous black-frame clearing and screen flickering!
+        if (needsRedraw || currentFrameIndex != lastRenderedFrameIndex) {
+            const size_t framePixels = currentHeader.width * currentHeader.height;
+            const size_t frameOffset = currentFrameIndex * framePixels;
 
-        if (frameOffset + framePixels <= pixelBuffer.size()) {
-            const uint16_t* framePtr = pixelBuffer.data() + frameOffset;
-            renderFrame(framePtr, currentHeader.width, currentHeader.height);
+            if (frameOffset + framePixels <= pixelBuffer.size()) {
+                const uint16_t* framePtr = pixelBuffer.data() + frameOffset;
+                renderFrame(framePtr, currentHeader.width, currentHeader.height);
+                lastRenderedFrameIndex = currentFrameIndex;
+                needsRedraw = false;
+            }
         }
 
         xSemaphoreGive(frameMutex);
@@ -175,7 +187,11 @@ void CustomProjectionEffect::update(const DeviceSettings& settings) {
 
 void CustomProjectionEffect::renderFrame(const uint16_t* frameData, uint16_t w, uint16_t h) {
     LedDriver& led = LedDriver::getInstance();
-    led.clear();
+
+    // Only clear if the image doesn't cover the full matrix, avoiding black flashes
+    if (w < led.getWidth() || h < led.getHeight()) {
+        led.clear();
+    }
 
     // Center image on the 64x32 matrix if it's smaller than the screen
     int16_t offsetX = (led.getWidth() - w) / 2;

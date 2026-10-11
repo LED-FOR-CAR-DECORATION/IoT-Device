@@ -49,6 +49,8 @@ private:
     SemaphoreHandle_t frameMutex;
     bool hasValidPattern;
     bool isLiveDrawingActive;
+    int16_t lastRenderedFrameIndex;
+    bool needsRedraw;
 
     void renderFrame(const uint16_t* frameData, uint16_t w, uint16_t h);
 };

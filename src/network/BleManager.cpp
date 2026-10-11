@@ -157,9 +157,14 @@ void BleManager::handleBinaryFrame(const uint8_t* frame, size_t length) {
 
         case BLE_CMD_MODE:
             if (length >= 6) {
-                LOG_I(TAG, "Binary CMD: Mode -> %d", frame[2]);
-                state.setMode(static_cast<EffectMode>(frame[2]));
-                EffectManager::getInstance().setMode(static_cast<EffectMode>(frame[2]));
+                uint8_t m = frame[2];
+                LOG_I(TAG, "Binary CMD: Mode -> %d", m);
+                EffectMode newMode = static_cast<EffectMode>(m);
+                state.setMode(newMode);
+                EffectManager::getInstance().setMode(newMode);
+                if (newMode == EffectMode::WELCOME_CAR || newMode == EffectMode::CUSTOM_PRESET) {
+                    EffectManager::getInstance().getCustomEffect().loadFromFlash();
+                }
             }
             break;
 
@@ -473,8 +478,12 @@ void BleManager::handleJsonPayload(const std::string& commandStr) {
     }
     if (doc["mode"].is<uint8_t>() || doc["mode"].is<int>()) {
         uint8_t m = doc["mode"].as<uint8_t>();
-        state.setMode(static_cast<EffectMode>(m));
-        EffectManager::getInstance().setMode(static_cast<EffectMode>(m));
+        EffectMode newMode = static_cast<EffectMode>(m);
+        state.setMode(newMode);
+        EffectManager::getInstance().setMode(newMode);
+        if (newMode == EffectMode::WELCOME_CAR || newMode == EffectMode::CUSTOM_PRESET) {
+            EffectManager::getInstance().getCustomEffect().loadFromFlash();
+        }
     }
     if (doc["color"].is<JsonObject>()) {
         uint8_t r = doc["color"]["r"] | 255;

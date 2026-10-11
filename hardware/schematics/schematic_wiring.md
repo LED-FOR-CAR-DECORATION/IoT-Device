@@ -37,7 +37,7 @@ Tài liệu hướng dẫn kết nối các khối phần cứng trong hệ th�
  [ Micro Âm thanh MAX4466 ] ────► (Tín hiệu Analog 0-3V) ────► [ GPIO 34 ]
                                                                       │
  [ Tín hiệu Khóa xe ACC 12V ] ──► [ Cách ly quang PC817 ] ───► [ GPIO 35 ]
-                                                                      │
+                                                                       │
  [ Nút bấm Chuyển Mode ] ───────► (Nhấn xuống Mass 0V) ──────► [ GPIO 0 ]
 ```
 
