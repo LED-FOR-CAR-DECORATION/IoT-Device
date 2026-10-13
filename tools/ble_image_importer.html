@@ -454,6 +454,11 @@
       </div>
     </div>
 
+    <!-- E-Stop Warning Alert Banner -->
+    <div id="estopAlertBanner" style="display:none; background: linear-gradient(135deg, #d90429, #ef233c); color:#fff; padding:12px 16px; border-radius:10px; margin-bottom:15px; font-weight:bold; text-align:center; box-shadow: 0 4px 15px rgba(217,4,41,0.5); font-size:14px; animation: pulse 1.5s infinite;">
+      🚨 CẢNH BÁO: NÚT DỪNG KHẨN CẤP (E-STOP) ĐANG ĐƯỢC BẤM! MÀN HÌNH LED P5 ĐÃ TẮT HOÀN TOÀN.
+    </div>
+
     <!-- Navigation Tabs (Tất cả tính năng Bluetooth trong danh sách) -->
     <div class="nav-tabs">
       <button class="tab-btn active" onclick="switchTab('tab-import')">🖼️ Chiếu Ảnh</button>
@@ -718,6 +723,23 @@
           <span>📋 Nhật Ký Hoạt Động (Telemetry & Logs)</span>
           <button class="btn-sm btn-outline" onclick="document.getElementById('logBox').innerText=''">Xóa Log</button>
         </h2>
+
+        <!-- Telemetry Live Status Indicators -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 12px 0 16px 0;">
+          <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Trạng Thái E-Stop</div>
+            <div id="telemetryEstopBadge" style="font-size:13px; font-weight:bold; color:#00ff88; margin-top:4px;">🟢 BÌNH THƯỜNG</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Bộ Nhớ Free Heap</div>
+            <div id="telemetryHeap" style="font-size:13px; font-weight:bold; color:var(--accent); margin-top:4px;">-- KB</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Hiệu Ứng / Độ Sáng</div>
+            <div id="telemetryModeBri" style="font-size:13px; font-weight:bold; color:#ffb800; margin-top:4px;">-- / --</div>
+          </div>
+        </div>
+
         <div class="log-box" id="logBox">Hệ thống sẵn sàng...</div>
       </div>
     </div>
@@ -855,12 +877,49 @@
     function handleEsp32Notify(jsonStr) {
       try {
         const data = JSON.parse(jsonStr);
+
+        // 1. Xử lý sự kiện Dừng Khẩn Cấp (E-Stop)
+        if (data.event === 'emergency_stop' || data.emergency_stop !== undefined) {
+          const isStop = (data.event === 'emergency_stop' && data.active) || data.emergency_stop === true;
+          const banner = document.getElementById('estopAlertBanner');
+          if (banner) banner.style.display = isStop ? 'block' : 'none';
+
+          const estopBadge = document.getElementById('telemetryEstopBadge');
+          if (estopBadge) {
+            estopBadge.innerText = isStop ? '🚨 DỪNG KHẨN CẤP (ACTIVE)' : '🟢 BÌNH THƯỜNG (READY)';
+            estopBadge.style.color = isStop ? '#ff3333' : '#00ff88';
+          }
+
+          if (isStop) {
+            log('🚨 [CẢNH BÁO E-STOP] Đã kích hoạt dừng khẩn cấp! Toàn bộ LED Matrix đã ngắt.');
+          } else if (data.event === 'emergency_stop') {
+            log('🟢 [E-STOP RELEASED] Đã xoay nhả nút dừng khẩn cấp. Màn hình LED tiếp tục phát.');
+          }
+        }
+
+        // 2. Cập nhật chỉ số Telemetry định kỳ
+        if (data.free_heap !== undefined) {
+          const heapEl = document.getElementById('telemetryHeap');
+          if (heapEl) heapEl.innerText = `${Math.round(data.free_heap / 1024)} KB (${data.free_heap} B)`;
+
+          const modeBriEl = document.getElementById('telemetryModeBri');
+          if (modeBriEl) {
+            const modeNames = ["OFF", "STATIC", "BREATHING", "RAINBOW", "CHASE", "WELCOME", "CUSTOM", "MARQUEE"];
+            const modeName = modeNames[data.mode] || `Mode ${data.mode}`;
+            modeBriEl.innerText = `${modeName} | Bri: ${data.brightness}`;
+          }
+        }
+
+        // 3. Wi-Fi connection events
         if (data.event === 'wifi_connected' && data.ip) {
           document.getElementById('wifiIpDisplay').style.display = 'block';
           document.getElementById('wifiIpText').innerText = '✅ ESP32 đã kết nối Wi-Fi! IP: ' + data.ip;
           const portalBtn = document.getElementById('btnOpenWebPortal');
           portalBtn.href = 'http://' + data.ip;
           portalBtn.innerText = '🌐 Mở Web Portal (' + data.ip + ')';
+          log('🌐 ESP32 kết nối Wi-Fi thành công! IP: ' + data.ip);
+        } else if (data.event === 'wifi_disconnected') {
+          log('⚠️ ESP32 đã mất kết nối Wi-Fi!');
         }
       } catch (e) { }
     }

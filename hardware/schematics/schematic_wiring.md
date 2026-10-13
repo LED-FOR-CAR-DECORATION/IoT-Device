@@ -8,7 +8,8 @@ Tài liệu hướng dẫn kết nối các khối phần cứng trong hệ th�
 
 | Tên Ngoại vi | Chân ESP32 | Loại tín hiệu | Điện áp | Ghi chú kỹ thuật |
 |---|---|---|---|---|
-| **LED Data Out** | **GPIO 18** | Digital Output | 3.3V -> 5V | Qua IC đệm chuyển mức logic 74HCT125 / TXS0108E |
+| **LED Matrix P5 (HUB75 DMA)** | R1: 25, G1: 26, B1: 27<br>R2: 14, G2: 12, B2: 13<br>A: 23, B: 19, C: 5, D: 17<br>LAT: 4, OE: 15, CLK: 16 | Digital Output | 3.3V -> 5V | Chuẩn DMA I2S điều khiển ma trận LED RGB 64x32 |
+| **Nút Dừng Khẩn Cấp (E-Stop)** | **GPIO 32** | Digital Input | 3.3V | Nút cơ NO nối GND (Internal Pullup, ngắt LED tức thì) |
 | **Microphone ADC** | **GPIO 34** | Analog Input | 0 - 3.3V | Từ module MAX4466 / MAX9814 (chân VOUT) |
 | **Nút bấm Mode** | **GPIO 0** | Digital Input | 3.3V | Nút nhấn nhả nối xuống GND (Internal Pullup) |
 | **Tín hiệu ACC** | **GPIO 35** | Digital Input | 3.3V | Tín hiệu 12V chìa khóa xe qua Optocoupler PC817 |

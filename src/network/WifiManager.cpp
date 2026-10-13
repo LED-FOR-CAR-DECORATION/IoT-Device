@@ -468,6 +468,7 @@ void WifiManager::handleApiStatus() {
     json += "\"speed\":" + String(s.speed) + ",";
     json += "\"mode\":" + String(static_cast<int>(s.currentMode)) + ",";
     json += "\"ip\":\"" + getIpAddress() + "\",";
+    json += "\"emergency_stop\":" + String(StateManager::getInstance().isEmergencyStopped() ? "true" : "false") + ",";
     json += "\"free_heap\":" + String(ESP.getFreeHeap());
     json += "}";
     server.send(200, "application/json", json);

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 /**
  * @file pin_definitions.h
@@ -21,3 +21,5 @@
 #define PIN_HUB75_OE            15
 #define PIN_HUB75_CLK           16
 
+// Emergency Stop (E-Stop) Button (Pin NO -> GPIO 32, Pin C -> GND)
+#define PIN_E_STOP              32

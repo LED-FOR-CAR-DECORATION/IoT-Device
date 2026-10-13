@@ -137,10 +137,11 @@ Dùng cho các lệnh có cấu trúc phức tạp: cấu hình Wi-Fi, đặt t�
 
 ---
 
-## 4. Báo cáo Trạng thái Thiết bị (Status Telemetry)
+## 4. Báo cáo Trạng thái Thiết bị (Status Telemetry & Events)
 
 Phát qua BLE Status Characteristic (Notify) hoặc MQTT Topic `car/led/status`:
 
+### Định kỳ Heartbeat Telemetry (Mỗi 5s):
 ```json
 {
   "power": true,
@@ -148,7 +149,26 @@ Phát qua BLE Status Characteristic (Notify) hoặc MQTT Topic `car/led/status`:
   "mode": 6,
   "speed": 60,
   "color": {"r": 0, "g": 150, "b": 255},
+  "emergency_stop": false,
   "free_heap": 182400
+}
+```
+
+### Sự kiện Dừng Khẩn Cấp (E-Stop Immediate Notification):
+- **Khi nhấn nút E-Stop (GPIO 32 chập Mass):**
+```json
+{
+  "event": "emergency_stop",
+  "active": true,
+  "message": "EMERGENCY STOP TRIGGERED: Matrix Blanked"
+}
+```
+- **Khi nhả/mở nút E-Stop:**
+```json
+{
+  "event": "emergency_stop",
+  "active": false,
+  "message": "Emergency Stop Released: Resuming normal operation"
 }
 ```
 

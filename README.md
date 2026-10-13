@@ -17,6 +17,7 @@ Repository chứa mã nguồn Firmware cho hệ thống điều khiển LED tran
 - **Kết nối thông minh:**
   - **Bluetooth Low Energy (BLE):** Điều khiển trực tiếp từ ứng dụng Smartphone không cần Router/Internet.
   - **Wi-Fi & MQTT:** Hỗ trợ đồng bộ đám mây và cập nhật phần mềm từ xa qua OTA (Over-The-Air).
+- **Dừng khẩn cấp phần cứng (Hardware Emergency Stop - E-Stop):** Tích hợp nút ngắt khẩn cấp trên GPIO 32, lập tức blank màn hình LED P5 (< 16ms), đồng thời bắn event cảnh báo thời gian thực qua BLE Status Notification, MQTT và Web Suite.
 - **Bộ nhớ lưu trạng thái (NVS Storage):** Tự động lưu màu sắc, độ sáng, chế độ hoạt động và tự phục hồi khi khởi động lại.
 
 ---
@@ -58,6 +59,8 @@ IoT-Device/
 │   │   ├── Logger.h/.cpp           # Hệ thống log màu theo thời gian thực
 │   │   └── ColorUtils.h            # Các hàm biến đổi không gian màu (HSV <-> RGB)
 │   └── main.cpp                    # Điểm khởi chạy chính & khởi tạo tác vụ FreeRTOS
+├── tools/                          # Công cụ kiểm thử Web & nạp ảnh
+│   └── ble_image_importer.html     # Web BLE Suite (Chiếu ảnh, Bút vẽ Live, Bảng đèn, Telemetry)
 ├── lib/                            # Thư viện cục bộ (Local Libraries)
 ├── test/                           # Bộ kiểm thử đơn vị (Unit Tests)
 ├── .gitignore                      # Cấu hình bỏ qua file rác, file build và secrets
@@ -101,7 +104,8 @@ cp include/secrets.example.h include/secrets.h
 
 | Ngoại vi | Chân ESP32 | Mô tả |
 |---|---|---|
-| **LED Data** | **GPIO 18** | Tín hiệu điều khiển LED qua Level Shifter (3.3V -> 5V) |
+| **LED Matrix P5 (HUB75 DMA)** | R1: 25, G1: 26, B1: 27, R2: 14, G2: 12, B2: 13, A: 23, B: 19, C: 5, D: 17, LAT: 4, OE: 15, CLK: 16 | Chuẩn DMA I2S điều khiển ma trận LED RGB 64x32 |
+| **Nút Dừng Khẩn Cấp (E-Stop)** | **GPIO 32** | Nút cơ khẩn cấp kéo xuống GND (Internal Pullup, ngắt LED tức thì) |
 | **Microphone ADC** | **GPIO 34** | Cảm biến âm thanh (MAX4466 / MAX9814) nháy theo nhạc |
 | **Nút bấm chuyển Mode** | **GPIO 0** | Nút Boot hoặc nút bấm cơ ngoài xe |
 | **Tín hiệu ACC** | **GPIO 35** | Nhận biết trạng thái khóa điện ô tô |

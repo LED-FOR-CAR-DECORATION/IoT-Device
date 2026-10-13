@@ -78,3 +78,41 @@ Tài liệu đặc tả giao thức giao tiếp giữa ứng dụng Mobile (Flut
 * **Topic Lệnh (Subscribe):** `car/led/command`
 * **Topic Trạng thái (Publish):** `car/led/status`
 * Cấu trúc payload hoàn toàn tương đồng với định dạng JSON BLE nêu trên.
+
+---
+
+## 4. Định dạng Gói tin Báo cáo Trạng thái (Telemetry & Events)
+
+Thiết bị phát qua **BLE Status Characteristic (Notify)** và **MQTT Topic `car/led/status`**:
+
+### Định kỳ Heartbeat Telemetry (Mỗi 5 giây):
+```json
+{
+  "power": true,
+  "brightness": 180,
+  "speed": 60,
+  "mode": 6,
+  "color": {"r": 0, "g": 150, "b": 255},
+  "emergency_stop": false,
+  "free_heap": 182400
+}
+```
+
+### Sự kiện Dừng Khẩn Cấp (E-Stop Immediate Notification):
+- **Khi nhấn nút E-Stop (GPIO 32 thông mạch xuống GND):**
+```json
+{
+  "event": "emergency_stop",
+  "active": true,
+  "message": "EMERGENCY STOP TRIGGERED: Matrix Blanked"
+}
+```
+- **Khi xoay mở/nhả nút E-Stop (GPIO 32 trở lại mức HIGH):**
+```json
+{
+  "event": "emergency_stop",
+  "active": false,
+  "message": "Emergency Stop Released: Resuming normal operation"
+}
+```
+

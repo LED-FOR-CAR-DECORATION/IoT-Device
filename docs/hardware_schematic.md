@@ -24,11 +24,31 @@ Hệ thống điện ô tô sử dụng điện áp bình 12V (hoặc lên đế
 
 | Thiết bị ngoại vi | Chân ESP32 | Chú thích |
 |---|---|---|
-| **LED Strip Data** | **GPIO 18** | Tín hiệu điều khiển dữ liệu LED qua Level Shifter (3.3V -> 5V) + trở 470Ω |
+| **LED Matrix P5 (HUB75 DMA)** | R1: 25, G1: 26, B1: 27<br>R2: 14, G2: 12, B2: 13<br>A: 23, B: 19, C: 5, D: 17<br>LAT: 4, OE: 15, CLK: 16 | Chuẩn DMA I2S điều khiển ma trận LED RGB 64x32 |
+| **Nút Dừng Khẩn Cấp (E-Stop)** | **GPIO 32** | Nút cơ khẩn cấp kéo xuống GND (Internal Pullup, ngắt LED tức thì) |
 | **Microphone ADC** | **GPIO 34** | Chân Analog đọc tín hiệu âm thanh từ cảm biến mic MAX4466 / MAX9814 |
 | **Nút bấm Mode** | **GPIO 0** | Nút bấm vật lý (nút Boot onboard hoặc nút bấm cơ ngoài xe nối GND) |
 | **ACC Detect (Tùy chọn)** | **GPIO 35** | Tín hiệu nhận biết xe nổ máy / mở khóa điện (qua cầu phân áp hoặc optocoupler) |
 | **Status LED** | **GPIO 2** | Đèn LED báo hiệu trạng thái hoạt động trên board ESP32 |
+
+---
+
+## 3. Sơ đồ đấu nối Nút Dừng Khẩn Cấp (E-Stop Button)
+
+Nút dừng khẩn cấp sử dụng tiếp điểm thường mở (NO - Normally Open), tích hợp trở kéo lên nội vi `INPUT_PULLUP`:
+
+```text
+[ Chân GPIO 32 ] ────► [ Chân NO ]
+                             │  (Nhấn nút ➔ Thông mạch xuống Mass)
+[ Chân GND     ] ────► [ Chân C  ]
+
+[ Chân NC      ] ────► (Bỏ trống)
+```
+
+- **Chân C (Common):** Nối vào chân `GND` của ESP32.
+- **Chân NO (Normally Open):** Nối vào chân `GPIO 32` của ESP32.
+- **Chân NC:** Bỏ trống.
+- **Nguyên lý hoạt động:** Bình thường tiếp điểm mở, GPIO 32 ở mức `HIGH` (3.3V). Khi nhấn nút dừng khẩn cấp, chân GPIO 32 bị chập xuống `LOW` (GND), vi điều khiển bắt ngắt tức thì để xóa bộ đệm DMA và ngắt phát màn hình LED.
 
 ---
 

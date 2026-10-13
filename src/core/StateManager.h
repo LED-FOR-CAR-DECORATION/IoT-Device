@@ -20,10 +20,16 @@ public:
     void setSpeed(uint8_t speed);
     void setPrimaryColor(uint8_t r, uint8_t g, uint8_t b);
 
+    // Emergency Stop (E-Stop) State & Telemetry
+    bool isEmergencyStopped() const;
+    void setEmergencyStopped(bool stopped);
+    String getTelemetryJson() const;
+
 private:
     StateManager();
     Preferences preferences;
     DeviceSettings currentSettings;
     bool isDirty;
     unsigned long lastSaveTime;
+    bool emergencyStopped;
 };

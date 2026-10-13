@@ -9,7 +9,7 @@ StateManager& StateManager::getInstance() {
     return instance;
 }
 
-StateManager::StateManager() : isDirty(false), lastSaveTime(0) {}
+StateManager::StateManager() : isDirty(false), lastSaveTime(0), emergencyStopped(false) {}
 
 void StateManager::init() {
     loadFromNVS();
@@ -90,4 +90,25 @@ void StateManager::saveToNVS() {
 
     isDirty = false;
     LOG_I(TAG, "Settings committed to NVS successfully");
+}
+
+bool StateManager::isEmergencyStopped() const {
+    return emergencyStopped;
+}
+
+void StateManager::setEmergencyStopped(bool stopped) {
+    emergencyStopped = stopped;
+}
+
+String StateManager::getTelemetryJson() const {
+    String json = "{";
+    json += "\"power\":" + String(currentSettings.powerOn ? "true" : "false") + ",";
+    json += "\"brightness\":" + String(currentSettings.brightness) + ",";
+    json += "\"speed\":" + String(currentSettings.speed) + ",";
+    json += "\"mode\":" + String(static_cast<int>(currentSettings.currentMode)) + ",";
+    json += "\"color\":{\"r\":" + String(currentSettings.primaryColor.r) + ",\"g\":" + String(currentSettings.primaryColor.g) + ",\"b\":" + String(currentSettings.primaryColor.b) + "},";
+    json += "\"emergency_stop\":" + String(emergencyStopped ? "true" : "false") + ",";
+    json += "\"free_heap\":" + String(ESP.getFreeHeap());
+    json += "}";
+    return json;
 }
