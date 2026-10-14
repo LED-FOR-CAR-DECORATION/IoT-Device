@@ -18,18 +18,23 @@ BleManager::BleManager()
     : pServer(nullptr), pControlCharacteristic(nullptr),
       pStatusCharacteristic(nullptr), deviceConnected(false),
       advertisingStartTime(0), isFastAdvertising(false),
+      currentConnHandle(0), connectedTime(0), connParamsUpdated(false),
       isReceivingProjection(false), expectedTransferBytes(0),
       lastJsonRxMillis(0) {}
 
 void BleManager::ServerCallbacks::onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc) {
     parent->deviceConnected = true;
+    parent->currentConnHandle = desc->conn_handle;
+    parent->connectedTime = millis();
+    parent->connParamsUpdated = false;
     LOG_I(TAG, "Smartphone connected over BLE (conn_handle: %d)", desc->conn_handle);
-    // Request fast connection parameters: 15ms - 30ms interval, latency 0, timeout 4s
-    pServer->updateConnParams(desc->conn_handle, 12, 24, 0, 400);
+    // DO NOT call pServer->updateConnParams() immediately here!
+    // Updating connection parameters during initial GATT service discovery triggers GATT 133 on Android devices.
 }
 
 void BleManager::ServerCallbacks::onDisconnect(NimBLEServer* pServer) {
     parent->deviceConnected = false;
+    parent->connParamsUpdated = false;
     parent->jsonRxBuffer.clear();
     LOG_I(TAG, "Client disconnected, restarting advertising...");
     parent->configureAdvertising(true);
@@ -61,9 +66,9 @@ void BleManager::configureAdvertising(bool fast) {
         isFastAdvertising = false;
     }
 
-    // Set preferred connection intervals in advertising data for smartphone OS
-    pAdvertising->setMinPreferred(12); // 15ms
-    pAdvertising->setMaxPreferred(24); // 30ms
+    // Set preferred connection intervals in advertising data for smartphone OS (units of 1.25ms)
+    pAdvertising->setMinPreferred(16); // 20ms
+    pAdvertising->setMaxPreferred(32); // 40ms
 
     advertisingStartTime = millis();
     pAdvertising->start();
@@ -197,10 +202,14 @@ void BleManager::handleBinaryFrame(const uint8_t* frame, size_t length) {
             break;
 
         case BLE_CMD_DRAW_PIXEL:
+            state.setMode(EffectMode::CUSTOM_PRESET);
+            EffectManager::getInstance().setMode(EffectMode::CUSTOM_PRESET);
             handleDrawPixel(frame, length);
             break;
 
         case BLE_CMD_DRAW_BATCH:
+            state.setMode(EffectMode::CUSTOM_PRESET);
+            EffectManager::getInstance().setMode(EffectMode::CUSTOM_PRESET);
             handleDrawBatch(frame, length);
             break;
 
@@ -209,6 +218,47 @@ void BleManager::handleBinaryFrame(const uint8_t* frame, size_t length) {
             state.setMode(EffectMode::CUSTOM_PRESET);
             EffectManager::getInstance().setMode(EffectMode::CUSTOM_PRESET);
             EffectManager::getInstance().getCustomEffect().resetToBlankCanvas();
+            break;
+
+        case BLE_CMD_CANVAS_FILL:
+            if (length >= 6) {
+                state.setMode(EffectMode::CUSTOM_PRESET);
+                EffectManager::getInstance().setMode(EffectMode::CUSTOM_PRESET);
+                uint8_t r = frame[2], g = frame[3], b = frame[4];
+                EffectManager::getInstance().getCustomEffect().fillCanvas(ColorUtils::color565(r, g, b));
+            }
+            break;
+
+        case BLE_CMD_DRAW_LINE:
+            if (length >= 11) {
+                state.setMode(EffectMode::CUSTOM_PRESET);
+                EffectManager::getInstance().setMode(EffectMode::CUSTOM_PRESET);
+                int16_t x0 = frame[2], y0 = frame[3], x1 = frame[4], y1 = frame[5];
+                uint8_t r = frame[6], g = frame[7], b = frame[8];
+                bool isCommit = (frame[9] != 0);
+                EffectManager::getInstance().getCustomEffect().drawLiveLine(x0, y0, x1, y1, ColorUtils::color565(r, g, b), isCommit);
+            }
+            break;
+
+        case BLE_CMD_DRAW_RECT:
+            if (length >= 11) {
+                state.setMode(EffectMode::CUSTOM_PRESET);
+                EffectManager::getInstance().setMode(EffectMode::CUSTOM_PRESET);
+                int16_t x0 = frame[2], y0 = frame[3], x1 = frame[4], y1 = frame[5];
+                uint8_t r = frame[6], g = frame[7], b = frame[8];
+                bool isCommit = (frame[9] != 0);
+                EffectManager::getInstance().getCustomEffect().drawLiveRect(x0, y0, x1, y1, ColorUtils::color565(r, g, b), isCommit);
+            }
+            break;
+
+        case BLE_CMD_FLOOD_FILL:
+            if (length >= 7) {
+                state.setMode(EffectMode::CUSTOM_PRESET);
+                EffectManager::getInstance().setMode(EffectMode::CUSTOM_PRESET);
+                int16_t x = frame[2], y = frame[3];
+                uint8_t r = frame[4], g = frame[5], b = frame[6];
+                EffectManager::getInstance().getCustomEffect().floodFill(x, y, ColorUtils::color565(r, g, b));
+            }
             break;
 
         default:
@@ -590,6 +640,17 @@ void BleManager::update() {
     if (!deviceConnected && isFastAdvertising && (millis() - advertisingStartTime > 30000)) {
         LOG_I(TAG, "30s fast advertising expired, switching to normal advertising");
         configureAdvertising(false);
+    }
+
+    // Safe delayed Connection Parameters update (Fix for Android GATT 133)
+    // Wait 2500ms after connection so Android / iOS completely finishes GATT service & characteristic discovery
+    if (deviceConnected && !connParamsUpdated && (millis() - connectedTime > 2500)) {
+        connParamsUpdated = true;
+        if (pServer) {
+            // 16 (20ms) to 32 (40ms), latency 0, timeout 400 (4s) - optimal balance for Android and iOS
+            pServer->updateConnParams(currentConnHandle, 16, 32, 0, 400);
+            LOG_I(TAG, "GATT discovery safe window passed: connection parameters updated for handle %d", currentConnHandle);
+        }
     }
 
     // Stale JSON buffer garbage collection

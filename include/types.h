@@ -19,6 +19,14 @@ enum class EffectMode : uint8_t {
     MARQUEE_TEXT
 };
 
+// Automotive Turn Signal States
+enum class TurnSignalState : uint8_t {
+    IDLE = 0,
+    LEFT,
+    RIGHT,
+    HAZARD
+};
+
 // RGB Color structure
 struct RGBColor {
     uint8_t r;

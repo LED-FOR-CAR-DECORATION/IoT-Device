@@ -13,9 +13,12 @@ StateManager::StateManager() : isDirty(false), lastSaveTime(0), emergencyStopped
 
 void StateManager::init() {
     loadFromNVS();
-    if (currentSettings.currentMode == EffectMode::RAINBOW_WAVE) {
-        setMode(EffectMode::CUSTOM_PRESET);
+    currentSettings.powerOn = true;                          // Always turn display ON on startup
+    currentSettings.currentMode = EffectMode::CUSTOM_PRESET; // Default to Car Mascot Effect
+    if (currentSettings.brightness < 50) {
+        currentSettings.brightness = 180;
     }
+    LOG_I(TAG, "Initialized: Power ON, Mode = Car Mascot (CUSTOM_PRESET), Brightness = %d", currentSettings.brightness);
 }
 
 DeviceSettings& StateManager::getSettings() {

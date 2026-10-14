@@ -1,6 +1,7 @@
 #include "EffectManager.h"
 #include "drivers/LedDriver.h"
 #include "core/StateManager.h"
+#include "core/CarSignalService.h"
 #include "utils/Logger.h"
 
 #define TAG "EFFECTS"
@@ -20,6 +21,7 @@ void EffectManager::init() {
     chaseEffect.init();
     customEffect.init();
     marqueeEffect.init();
+    turnSignalEffect.init();
 
     setMode(StateManager::getInstance().getSettings().currentMode);
     LOG_I(TAG, "Effect Manager initialized");
@@ -86,7 +88,18 @@ void EffectManager::update() {
     // Set brightness
     led.setBrightness(settings.brightness);
 
-    // Render active animation
+    // 1. Automotive Turn Signal Priority Override (Safety First)
+    CarSignalService& carSignal = CarSignalService::getInstance();
+    if (carSignal.isActive()) {
+        turnSignalEffect.setSignalState(carSignal.getState());
+        turnSignalEffect.update(settings);
+        led.show();
+        return;
+    } else {
+        turnSignalEffect.setSignalState(TurnSignalState::IDLE);
+    }
+
+    // 2. Render active standard animation
     if (activeEffect) {
         activeEffect->update(settings);
     }

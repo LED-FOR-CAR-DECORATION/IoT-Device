@@ -30,6 +30,14 @@ public:
     // Draw single pixel in real-time (for App interactive live pencil canvas)
     void drawLivePixel(int16_t x, int16_t y, uint16_t color565);
 
+    // Interactive shape drawing with live drag preview and commitment
+    void drawLiveLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color565, bool isCommit);
+    void drawLiveRect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color565, bool isCommit);
+
+    // Instant Flood Fill (Bucket Tool) and full-screen color fill
+    void floodFill(int16_t startX, int16_t startY, uint16_t newColor565);
+    void fillCanvas(uint16_t color565);
+
     // Reset to pure black blank canvas for interactive live drawing
     void resetToBlankCanvas();
 

@@ -26,6 +26,8 @@ public:
     void fill(uint16_t color565);
     
     // Text and Graphic helpers
+    void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color565);
+    void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color565);
     void drawText(int16_t x, int16_t y, const String& text, uint16_t color565, uint8_t textSize = 1);
     void drawBitmap(int16_t x, int16_t y, const uint16_t* bitmap, int16_t w, int16_t h);
 

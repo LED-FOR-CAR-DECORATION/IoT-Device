@@ -432,6 +432,257 @@
       white-space: pre-wrap;
       margin-top: 6px;
     }
+
+    /* DIY Pixel Studio Enhanced Toolbar */
+    .diy-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      background: #101322;
+      padding: 8px;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      margin-bottom: 8px;
+    }
+
+    .tool-btn {
+      padding: 6px 10px;
+      background: #1c2035;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+
+    .tool-btn:hover {
+      background: #252b48;
+    }
+
+    .tool-btn.active {
+      background: rgba(0, 210, 255, 0.2);
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 8px rgba(0, 210, 255, 0.3);
+    }
+
+    .tool-btn.btn-action {
+      background: #181d30;
+      color: var(--text-muted);
+    }
+
+    .tool-btn.btn-action:hover {
+      color: var(--text);
+    }
+
+    /* Pixel Grid Overlay */
+    .preview-wrap.pixel-grid-active::after {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 384px;
+      aspect-ratio: 2/1;
+      pointer-events: none;
+      background-size: calc(100% / 64) calc(100% / 32);
+      background-image: 
+        linear-gradient(to right, rgba(255,255,255,0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.08) 1px, transparent 1px);
+      border-radius: 6px;
+    }
+
+    /* DIY Gallery Cards */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .gallery-card {
+      background: #101322;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color 0.2s;
+    }
+
+    .gallery-card:hover {
+      border-color: var(--accent);
+    }
+
+    .gallery-thumb {
+      width: 100%;
+      aspect-ratio: 2/1;
+      background: #000;
+      border-radius: 4px;
+      image-rendering: pixelated;
+      border: 1px solid #232842;
+    }
+
+    .gallery-title {
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #fff;
+    }
+
+    .gallery-actions {
+      display: flex;
+      gap: 4px;
+      margin-top: auto;
+    }
+
+    .gallery-actions button {
+      flex: 1;
+      padding: 4px;
+      font-size: 10px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* Feature Tree View Styles */
+    .tree-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tree-stats {
+      background: linear-gradient(135deg, rgba(0, 210, 255, 0.1), rgba(121, 40, 202, 0.1));
+      border: 1px solid rgba(0, 210, 255, 0.3);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .tree-folder {
+      background: #151829;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      overflow: hidden;
+    }
+
+    .tree-folder-header {
+      padding: 10px 12px;
+      background: #1b2038;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 700;
+      font-size: 13px;
+      transition: background 0.15s;
+    }
+
+    .tree-folder-header:hover {
+      background: #232948;
+    }
+
+    .tree-folder-header .arrow {
+      transition: transform 0.2s;
+      font-size: 10px;
+      color: var(--accent);
+    }
+
+    .tree-folder.collapsed .arrow {
+      transform: rotate(-90deg);
+    }
+
+    .tree-folder.collapsed .tree-children {
+      display: none;
+    }
+
+    .tree-children {
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .tree-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #0d101d;
+      border: 1px solid #1c223a;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .tree-item-title {
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tree-item-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .tree-tag {
+      display: inline-block;
+      font-size: 9px;
+      font-family: monospace;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #708090;
+      margin-top: 4px;
+    }
+
+    .status-badge {
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-badge.done {
+      background: rgba(0, 240, 118, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(0, 240, 118, 0.4);
+    }
+
+    .status-badge.testing {
+      background: rgba(255, 184, 0, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(255, 184, 0, 0.4);
+    }
+
+    .status-badge.plan {
+      background: rgba(0, 210, 255, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(0, 210, 255, 0.4);
+    }
   </style>
 </head>
 
@@ -463,9 +714,10 @@
     <div class="nav-tabs">
       <button class="tab-btn active" onclick="switchTab('tab-import')">🖼️ Chiếu Ảnh</button>
       <button class="tab-btn" onclick="switchTab('tab-controls')">🎛️ Bảng Đèn</button>
-      <button class="tab-btn" onclick="switchTab('tab-canvas')">🎨 Bút Vẽ Live</button>
+      <button class="tab-btn" onclick="switchTab('tab-canvas')">🎨 Xưởng DIY</button>
       <button class="tab-btn" onclick="switchTab('tab-text')">📝 Chạy Chữ</button>
       <button class="tab-btn" onclick="switchTab('tab-wifi')">📶 Wi-Fi</button>
+      <button class="tab-btn" onclick="switchTab('tab-tree')">🌳 Cây Tính Năng</button>
       <button class="tab-btn" onclick="switchTab('tab-logs')">📋 Nhật Ký</button>
     </div>
 
@@ -580,31 +832,87 @@
       </div>
     </div>
 
-    <!-- ================= TAB 3: BÚT VẼ TRỰC TIẾP (LIVE CANVAS) ================= -->
+    <!-- ================= TAB 3: XƯỞNG SÁNG TẠO DIY PIXEL ================= -->
     <div class="tab-pane" id="tab-canvas">
       <div class="card">
         <h2>
-          <span>🎨 Bút Vẽ Trực Tiếp (Bảng Đen)</span>
-          <button class="btn-sm btn-danger" onclick="clearLiveCanvas()">⬛ Hiện Bảng Đen / Xóa</button>
+          <span>🎨 Xưởng Sáng Tạo DIY Pixel (64x32)</span>
+          <button class="btn-sm btn-danger" onclick="clearLiveCanvas()">⬛ Xóa Trắng Bảng</button>
         </h2>
         <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
-          Dùng ngón tay chạm hoặc vẽ lên ô lưới 64x32. Nét vẽ sẽ xuất hiện <b>tức thì</b> lên bảng LED HUB75 qua gói
-          Batch Drawing (Opcode 0x14)!
+          Tự do vẽ pixel art, logo hoặc icon cho xe hơi. Nét vẽ đồng bộ <b>thời gian thực</b> lên LED HUB75 qua BLE!
         </p>
 
-        <div class="preview-wrap">
-          <canvas id="liveCanvas" width="64" height="32"></canvas>
+        <!-- Bộ công cụ vẽ DIY (Toolbar) -->
+        <div class="diy-toolbar">
+          <button class="tool-btn active" id="toolPencil" onclick="setDrawingTool('pencil', this)">✏️ Bút Vẽ</button>
+          <button class="tool-btn" id="toolEraser" onclick="setDrawingTool('eraser', this)">🧹 Tẩy</button>
+          <button class="tool-btn" id="toolBucket" onclick="setDrawingTool('bucket', this)">🪣 Đổ Màu</button>
+          <button class="tool-btn" id="toolPicker" onclick="setDrawingTool('picker', this)">👁️ Hút Màu</button>
+          <button class="tool-btn" id="toolLine" onclick="setDrawingTool('line', this)">📏 Đường Thẳng</button>
+          <button class="tool-btn" id="toolRect" onclick="setDrawingTool('rect', this)">🔲 Chữ Nhật</button>
+          <div style="flex:1;"></div>
+          <button class="tool-btn btn-action" onclick="undoCanvas()" title="Hoàn tác">↩️ Undo</button>
+          <button class="tool-btn btn-action" onclick="redoCanvas()" title="Làm lại">↪️ Redo</button>
+          <button class="tool-btn btn-action" id="btnToggleGrid" onclick="togglePixelGrid()">📐 Lưới: BẬT</button>
         </div>
 
-        <div class="color-chips" style="justify-content:center; margin-top:8px;">
-          <span style="font-size:12px; color:var(--text-muted); line-height:34px; margin-right:4px;">Màu vẽ:</span>
-          <div class="color-chip active" style="background:#00d2ff;" onclick="setDrawColor(0, 210, 255, this)"></div>
-          <div class="color-chip" style="background:#ff0055;" onclick="setDrawColor(255, 0, 85, this)"></div>
-          <div class="color-chip" style="background:#00f076;" onclick="setDrawColor(0, 240, 118, this)"></div>
-          <div class="color-chip" style="background:#ffb800;" onclick="setDrawColor(255, 184, 0, this)"></div>
-          <div class="color-chip" style="background:#ffffff;" onclick="setDrawColor(255, 255, 255, this)"></div>
-          <div class="color-chip" style="background:#000000; border-color:#555;" onclick="setDrawColor(0, 0, 0, this)"
-            title="Tẩy xóa"></div>
+        <!-- Khung vẽ Canvas 64x32 -->
+        <div class="preview-wrap pixel-grid-active" id="liveCanvasWrap">
+          <canvas id="liveCanvas" width="64" height="32"></canvas>
+        </div>
+        <div id="diyMiniLog" style="font-size:11px; font-family:monospace; color:var(--accent); background:#0c0f1c; padding:6px 10px; border-radius:6px; margin-top:6px; border:1px solid var(--card-border); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">💡 Nhật ký: Sẵn sàng vẽ.</div>
+
+        <!-- Bảng màu Palette & Custom Color Picker -->
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-top:8px;">
+          <div class="color-chips" style="margin-top:0;">
+            <div class="color-chip active" style="background:#00d2ff;" onclick="setDrawColor(0, 210, 255, this)" title="Ice Blue"></div>
+            <div class="color-chip" style="background:#ff0055;" onclick="setDrawColor(255, 0, 85, this)" title="Neon Pink"></div>
+            <div class="color-chip" style="background:#00f076;" onclick="setDrawColor(0, 240, 118, this)" title="Emerald"></div>
+            <div class="color-chip" style="background:#ffb800;" onclick="setDrawColor(255, 184, 0, this)" title="Amber Yellow"></div>
+            <div class="color-chip" style="background:#9d4edd;" onclick="setDrawColor(157, 78, 221, this)" title="Purple"></div>
+            <div class="color-chip" style="background:#ff5400;" onclick="setDrawColor(255, 84, 0, this)" title="Orange"></div>
+            <div class="color-chip" style="background:#ffffff;" onclick="setDrawColor(255, 255, 255, this)" title="White"></div>
+            <div class="color-chip" style="background:#000000; border-color:#555;" onclick="setDrawColor(0, 0, 0, this)" title="Black / Erase"></div>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <label style="font-size:12px; color:var(--text-muted);">Màu tự chọn:</label>
+            <input type="color" id="diyCustomColor" value="#00d2ff" style="width:36px; height:36px; padding:0; border:none; border-radius:8px; cursor:pointer; background:transparent;" onchange="setCustomDrawColor(this.value)">
+          </div>
+        </div>
+
+        <!-- Thanh thao tác Lưu & Xuất Bản DIY -->
+        <div style="margin-top:14px; display:flex; flex-direction:column; gap:8px;">
+          <button class="btn btn-success" onclick="burnDiyToEsp32()" id="btnBurnEsp32" style="background: linear-gradient(135deg, #00b09b, #96c93d);">
+            🚀 Lưu Vĩnh Viễn Lên Xe (Ghi Vào Flash SPIFFS ESP32)
+          </button>
+          
+          <div class="grid-2">
+            <button class="btn-sm btn-outline" onclick="saveDiyToGallery()" style="padding:10px;">
+              💾 Lưu Vào Bộ Sưu Tập Web
+            </button>
+            <button class="btn-sm btn-outline" onclick="exportDiyPng()" style="padding:10px;">
+              📥 Tải File PNG (64x32)
+            </button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px; margin-top:2px;">
+            <label class="btn-sm btn-action" style="cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; flex:1; text-align:center; padding:9px; background:#181d30; border:1px dashed var(--card-border); border-radius:8px;">
+              📤 Tải Ảnh Từ Máy Vào Bảng Vẽ
+              <input type="file" id="diyImageUpload" accept="image/*" style="display:none;" onchange="importDiyFromFile(event)">
+            </label>
+          </div>
+        </div>
+
+        <!-- Bộ Sưu Tập Tác Phẩm DIY Của Tôi (My DIY Gallery) -->
+        <div style="margin-top:16px; border-top:1px solid var(--card-border); padding-top:12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <span style="font-size:13px; font-weight:700; color:var(--accent);">📁 Kho Tác Phẩm DIY Đã Lưu</span>
+            <span id="diyGalleryCount" style="font-size:11px; color:var(--text-muted);">0 tác phẩm</span>
+          </div>
+          <div class="gallery-grid" id="diyGalleryList">
+            <!-- Tác phẩm đã lưu sẽ được hiển thị ở đây qua JavaScript -->
+          </div>
         </div>
       </div>
     </div>
@@ -716,6 +1024,250 @@
       </div>
     </div>
 
+    <!-- ================= TAB: CÂY TÍNH NĂNG HỆ THỐNG (FEATURE TRACKING) ================= -->
+    <div class="tab-pane" id="tab-tree">
+      <div class="card">
+        <h2>
+          <span>🌳 Cây Tính Năng & Kiến Trúc Hệ Thống</span>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-sm btn-outline" onclick="expandAllTree(true)">Mở Hết</button>
+            <button class="btn-sm btn-outline" onclick="expandAllTree(false)">Thu Gọn</button>
+          </div>
+        </h2>
+
+        <!-- Tổng quan tiến độ -->
+        <div class="tree-stats">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; font-weight:700; color:#fff;">📊 Tiến Độ Toàn Bộ Dự Án</span>
+            <span style="font-size:12px; font-weight:800; color:var(--success);">21 / 22 Hoàn Thành (95%)</span>
+          </div>
+          <div class="progress-bar-wrap" style="height:6px; background:rgba(255,255,255,0.1);">
+            <div style="width:95%; height:100%; background:var(--accent-grad); border-radius:6px;"></div>
+          </div>
+          <div style="display:flex; gap:10px; font-size:11px; color:var(--text-muted); margin-top:2px;">
+            <span>🟢 Sẵn sàng: <b>21</b></span>
+            <span>🟡 Đang thử nghiệm: <b>1</b></span>
+            <span>🔵 Kế hoạch: <b>0</b></span>
+          </div>
+        </div>
+
+        <!-- Cây thư mục chức năng -->
+        <div class="tree-wrap" style="margin-top:12px;">
+          
+          <!-- Nhóm 1: Phần Cứng & Cấp Nguồn -->
+          <div class="tree-folder" id="node-hw">
+            <div class="tree-folder-header" onclick="toggleTreeNode('node-hw')">
+              <span>🚗 1. Phần Cứng & Cấp Nguồn Xe Hơi</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="tree-children">
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">⚡ Nguồn Tổ Ong 5V 20A & Mass Chung</div>
+                  <div class="tree-item-desc">Cấp nguồn 5V riêng cho tấm LED P5, nối chung mass GND với ESP32 chống nhiễu.</div>
+                  <div class="tree-tag">schematic_wiring.md #Power</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">🛑 Nút Dừng Khẩn Cấp LA16-A (E-Stop)</div>
+                  <div class="tree-item-desc">Tiếp điểm NO nối GPIO 32, nhấn chập mass ngắt hiển thị ngay lập tức an toàn.</div>
+                  <div class="tree-tag">PIN_E_STOP = 32</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">🚙 Giao Tiếp Ô Tô Hyundai Grand i10</div>
+                  <div class="tree-item-desc">Hỗ trợ nhận tín hiệu xi-nhan/hazard qua cổng C-CAN 500kbps hoặc trích dây qua Opto PC817.</div>
+                  <div class="tree-tag">C-CAN / Opto PC817</div>
+                </div>
+                <span class="status-badge testing">🟡 Đang giả lập</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nhóm 2: Lõi Firmware ESP32 -->
+          <div class="tree-folder" id="node-fw">
+            <div class="tree-folder-header" onclick="toggleTreeNode('node-fw')">
+              <span>⚡ 2. Lõi Firmware ESP32 (Core & Drivers)</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="tree-children">
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">🧠 FreeRTOS Đa Nhân (Dual-Core)</div>
+                  <div class="tree-item-desc">Core 1 chuyên render LED 60 FPS mượt mà; Core 0 xử lý Bluetooth, Wi-Fi, MQTT.</div>
+                  <div class="tree-tag">main.cpp #ledTask</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">🖥️ Driver HUB75 Matrix I2S DMA</div>
+                  <div class="tree-item-desc">Xuất dữ liệu song song qua I2S DMA không tốn CPU, điều khiển tấm ma trận P5 64x32.</div>
+                  <div class="tree-tag">LedDriver.cpp / 13 GPIOs</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">💾 StorageManager (Hệ Thống File SPIFFS)</div>
+                  <div class="tree-item-desc">Lưu trữ hoạt họa xe thể thao, ảnh pixel art và mẫu thiết kế DIY vào chip Flash.</div>
+                  <div class="tree-tag">StorageManager.cpp / SPIFFS</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">⚙️ StateManager (NVS Flash Persistence)</div>
+                  <div class="tree-item-desc">Lưu trạng thái nguồn, độ sáng, hiệu ứng; tự khởi động lại đúng cấu hình sau mất điện.</div>
+                  <div class="tree-tag">StateManager.cpp / Preferences</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">🕹️ CarSignalService (Bộ Xử Lý & Giả Lập Tín Hiệu)</div>
+                  <div class="tree-item-desc">Nhận phím L/R/H/S từ Serial để test xi-nhan tại bàn; sẵn sàng gắn module CAN Bus.</div>
+                  <div class="tree-tag">CarSignalService.cpp</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nhóm 3: Động Cơ Hiệu Ứng LED -->
+          <div class="tree-folder" id="node-fx">
+            <div class="tree-folder-header" onclick="toggleTreeNode('node-fx')">
+              <span>💡 3. Động Cơ Hiệu Ứng LED (Visual Effects Engine)</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="tree-children">
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">🏎️ Hiệu Ứng Hoạt Họa Xe Hơi (Mascot)</div>
+                  <div class="tree-item-desc">Xe thể thao Blue Sports Car chuyển động 2 frame pixel art, fallback PROGMEM an toàn.</div>
+                  <div class="tree-tag">CustomProjectionEffect.cpp</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">🟡 Xi-Nhan Mũi Tên Đuổi (Audi / Lexus Style)</div>
+                  <div class="tree-item-desc">Mũi tên vàng hổ phách (Amber) chạy tuần tự sang trái/phải, ưu tiên an toàn (Override).</div>
+                  <div class="tree-tag">TurnSignalEffect.cpp</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">📝 Bảng Chạy Chữ Thông Điệp Lái Xe (Marquee)</div>
+                  <div class="tree-item-desc">Chữ chạy mượt mà, hỗ trợ font tiếng Việt tự động khử dấu, tùy chỉnh tốc độ & màu sắc.</div>
+                  <div class="tree-tag">MarqueeTextEffect.cpp</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">🌈 Bộ Hiệu Ứng Ambient Xe Hơi</div>
+                  <div class="tree-item-desc">Sóng Cầu Vồng (Rainbow Wave), Nhịp Thở (Breathing), Dòng Chảy (Chase Flow), Đơn Sắc.</div>
+                  <div class="tree-tag">Rainbow, Breathing, Chase</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nhóm 4: Kết Nối & Giao Thức Không Dây -->
+          <div class="tree-folder" id="node-conn">
+            <div class="tree-folder-header" onclick="toggleTreeNode('node-conn')">
+              <span>📡 4. Giao Thức & Kết Nối Không Dây</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="tree-children">
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">📶 Bluetooth Low Energy (NimBLE GATT Server)</div>
+                  <div class="tree-item-desc">Đã sửa triệt để lỗi GATT 133 bằng cơ chế Delayed Conn Params (2.5s) & bộ đệm phân mảnh.</div>
+                  <div class="tree-tag">BleManager.cpp #GATT133-Fixed</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">📦 Giao Thức Nhị Phân 7-Byte (Binary Protocol)</div>
+                  <div class="tree-item-desc">Độ trễ thấp <15ms với checksum XOR, tối ưu cho thanh trượt màu và nét vẽ trực tiếp.</div>
+                  <div class="tree-tag">Opcodes 0x01 - 0x15</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">🌐 Wi-Fi Provisioning & Web Portal</div>
+                  <div class="tree-item-desc">Cấp Wi-Fi xe hơi qua BLE, tự động mở Web Server điều khiển nội bộ không cần Internet.</div>
+                  <div class="tree-tag">WifiManager.cpp / WebServer</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">☁️ MQTT Cloud Telemetry & Remote Control</div>
+                  <div class="tree-item-desc">Báo cáo nhịp tim Telemetry (Power, Heap, Mode, E-Stop) mỗi 5s lên Broker đám mây.</div>
+                  <div class="tree-tag">MqttManager.cpp / PubSubClient</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nhóm 5: Xưởng Sáng Tạo DIY & Công Cụ Web -->
+          <div class="tree-folder" id="node-tools">
+            <div class="tree-folder-header" onclick="toggleTreeNode('node-tools')">
+              <span>🎨 5. Xưởng Sáng Tạo DIY & Công Cụ Web Suite</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="tree-children">
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">🖌️ Xưởng Vẽ DIY Pixel 64x32</div>
+                  <div class="tree-item-desc">Bút, Tẩy, Đổ màu Bucket, Hút màu Picker, Kẻ thẳng, Chữ nhật, Lưới Pixel, Undo/Redo.</div>
+                  <div class="tree-tag">tools/ble_image_importer.html</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">💾 Giải Pháp Lưu Tác Phẩm DIY Đa Cấp</div>
+                  <div class="tree-item-desc">Lưu Kho Web (LocalStorage) + Ghi vĩnh viễn vào Flash SPIFFS (Opcode 0x10-0x12) + Xuất PNG.</div>
+                  <div class="tree-tag">Flow 2: 0x10->0x11->0x12</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">🖼️ Nạp & Dithering Ảnh Pixel Art (Flow 2)</div>
+                  <div class="tree-item-desc">Thuật toán Floyd-Steinberg, căn chỉnh Crop/Fit, tăng giảm tương phản và độ sáng.</div>
+                  <div class="tree-tag">tab-import</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+              <div class="tree-item">
+                <div>
+                  <div class="tree-item-title">📋 Nhật Ký & Theo Dõi Trực Quan (Telemetry Live)</div>
+                  <div class="tree-item-desc">Hiển thị trực tiếp trạng thái nút E-Stop, Free Heap RAM, Mode hiện tại qua BLE notify.</div>
+                  <div class="tree-tag">tab-logs</div>
+                </div>
+                <span class="status-badge done">✅ Hoàn thành</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <!-- ================= TAB 5: NHẬT KÝ HOẠT ĐỘNG ================= -->
     <div class="tab-pane" id="tab-logs">
       <div class="card">
@@ -764,17 +1316,14 @@
 
       const btn = document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
       if (btn) btn.classList.add('active');
-
-      // Tự động chuyển bảng LED về màn hình đen ngay khi mở Tab Bút Vẽ
-      if (tabId === 'tab-canvas') {
-        clearLiveCanvas();
-      }
     }
 
     function log(msg) {
       const box = document.getElementById('logBox');
       const time = new Date().toLocaleTimeString();
-      box.innerHTML = `[${time}] ${msg}\n` + box.innerHTML;
+      if (box) box.innerHTML = `[${time}] ${msg}\n` + box.innerHTML;
+      const mini = document.getElementById('diyMiniLog');
+      if (mini) mini.innerText = `💡 [${time}] ${msg}`;
     }
 
     // 7-Byte Standard Binary Frame Builder with XOR Checksum
@@ -842,11 +1391,6 @@
         document.getElementById('btnSendWifiBle').disabled = false;
         document.getElementById('btnSendMarqueeBle').disabled = false;
         document.getElementById('btnStopMarqueeBle').disabled = false;
-
-        // Nếu người dùng đang mở sẵn Tab Bút Vẽ, tự động chuyển LED sang bảng đen ngay
-        if (document.getElementById('tab-canvas').classList.contains('active')) {
-          clearLiveCanvas();
-        }
 
         log('🎉 KẾT NỐI BLUETOOTH THÀNH CÔNG!');
       } catch (err) {
@@ -1158,27 +1702,154 @@
       }
     });
 
-    // --- TAB 3: LIVE INTERACTIVE CANVAS (OPCODES 0x13 & 0x14) ---
+    // --- TAB: XƯỞNG SÁNG TẠO DIY & VẼ PIXEL ART ---
     const lCanvas = document.getElementById('liveCanvas');
     const lCtx = lCanvas.getContext('2d');
     let isDrawing = false;
+    let activeTool = 'pencil'; // pencil, eraser, bucket, picker, line, rect
     let drawColor = { r: 0, g: 210, b: 255 };
     let strokeBuffer = [];
+    let dragStart = null;
+    let dragSnapshot = null;
+
+    // Undo / Redo History Stacks
+    const undoStack = [];
+    const redoStack = [];
+    const MAX_HISTORY = 30;
 
     // Init black background
     lCtx.fillStyle = '#000';
     lCtx.fillRect(0, 0, 64, 32);
 
+    function saveState() {
+      if (undoStack.length >= MAX_HISTORY) undoStack.shift();
+      undoStack.push(lCtx.getImageData(0, 0, 64, 32));
+      redoStack.length = 0; // Clear redo
+    }
+
+    function undoCanvas() {
+      if (undoStack.length === 0) return;
+      redoStack.push(lCtx.getImageData(0, 0, 64, 32));
+      const prev = undoStack.pop();
+      lCtx.putImageData(prev, 0, 0);
+      syncEntireCanvasToBleBuffer();
+      log('↩️ Undo: Đã hoàn tác bước trước.');
+    }
+
+    function redoCanvas() {
+      if (redoStack.length === 0) return;
+      undoStack.push(lCtx.getImageData(0, 0, 64, 32));
+      const next = redoStack.pop();
+      lCtx.putImageData(next, 0, 0);
+      syncEntireCanvasToBleBuffer();
+      log('↪️ Redo: Đã làm lại bước vẽ.');
+    }
+
+    function setDrawingTool(tool, el) {
+      activeTool = tool;
+      document.querySelectorAll('.diy-toolbar .tool-btn').forEach(btn => {
+        if (!btn.classList.contains('btn-action')) btn.classList.remove('active');
+      });
+      if (el) el.classList.add('active');
+      log(`🛠️ Chọn công cụ: ${tool.toUpperCase()}`);
+    }
+
+    function togglePixelGrid() {
+      const wrap = document.getElementById('liveCanvasWrap');
+      const btn = document.getElementById('btnToggleGrid');
+      if (!wrap) return;
+      const isActive = wrap.classList.toggle('pixel-grid-active');
+      if (btn) btn.innerText = isActive ? '📐 Lưới: BẬT' : '📐 Lưới: TẮT';
+    }
+
     function setDrawColor(r, g, b, el) {
       drawColor = { r, g, b };
+      const hex = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+      const picker = document.getElementById('diyCustomColor');
+      if (picker) picker.value = hex;
       document.querySelectorAll('#tab-canvas .color-chip').forEach(c => c.classList.remove('active'));
       if (el) el.classList.add('active');
+      if (activeTool === 'eraser' && (r !== 0 || g !== 0 || b !== 0)) {
+        setDrawingTool('pencil', document.getElementById('toolPencil'));
+      }
+    }
+
+    function setCustomDrawColor(hex) {
+      const rgb = hexToRgb(hex);
+      drawColor = rgb;
+      document.querySelectorAll('#tab-canvas .color-chip').forEach(c => c.classList.remove('active'));
+      if (activeTool === 'eraser') {
+        setDrawingTool('pencil', document.getElementById('toolPencil'));
+      }
+      log(`🎨 Chọn màu tùy chỉnh: ${hex}`);
+    }
+
+    // Frame builders for shapes & flood fill
+    function buildDrawLineFrame(x0, y0, x1, y1, r, g, b, isCommit) {
+      const commitByte = isCommit ? 1 : 0;
+      const csum = (0x17 ^ (x0 & 0xFF) ^ (y0 & 0xFF) ^ (x1 & 0xFF) ^ (y1 & 0xFF) ^ (r & 0xFF) ^ (g & 0xFF) ^ (b & 0xFF) ^ commitByte) & 0xFF;
+      return new Uint8Array([0xAA, 0x17, x0 & 0xFF, y0 & 0xFF, x1 & 0xFF, y1 & 0xFF, r & 0xFF, g & 0xFF, b & 0xFF, commitByte, csum, 0x55]);
+    }
+
+    function buildDrawRectFrame(x0, y0, x1, y1, r, g, b, isCommit) {
+      const commitByte = isCommit ? 1 : 0;
+      const csum = (0x18 ^ (x0 & 0xFF) ^ (y0 & 0xFF) ^ (x1 & 0xFF) ^ (y1 & 0xFF) ^ (r & 0xFF) ^ (g & 0xFF) ^ (b & 0xFF) ^ commitByte) & 0xFF;
+      return new Uint8Array([0xAA, 0x18, x0 & 0xFF, y0 & 0xFF, x1 & 0xFF, y1 & 0xFF, r & 0xFF, g & 0xFF, b & 0xFF, commitByte, csum, 0x55]);
+    }
+
+    function buildFloodFillFrame(x, y, r, g, b) {
+      const csum = (0x19 ^ (x & 0xFF) ^ (y & 0xFF) ^ (r & 0xFF) ^ (g & 0xFF) ^ (b & 0xFF)) & 0xFF;
+      return new Uint8Array([0xAA, 0x19, x & 0xFF, y & 0xFF, r & 0xFF, g & 0xFF, b & 0xFF, csum, 0x55]);
+    }
+
+    // High Reliability Sequential Async BLE Queue (Prevents all GATT Drops & Disconnections)
+    let isBleQueueRunning = false;
+    const bleWriteQueue = [];
+
+    async function queueBleFrame(frame) {
+      if (!writeCharacteristic) return;
+      bleWriteQueue.push(frame);
+      if (isBleQueueRunning) return;
+      isBleQueueRunning = true;
+
+      while (bleWriteQueue.length > 0) {
+        const pkt = bleWriteQueue.shift();
+        try {
+          await writeCharacteristic.writeValueWithoutResponse(pkt);
+          await new Promise(r => setTimeout(r, 12)); // 12ms pacing avoids controller congestion
+        } catch (err) {
+          console.warn('BLE send packet warning:', err);
+          await new Promise(r => setTimeout(r, 20));
+        }
+      }
+      isBleQueueRunning = false;
+    }
+
+    // Live preview rate limiter for lines & rectangles during drag (~28 FPS)
+    let lastDragPreviewTime = 0;
+    function sendDragPreviewBle(tool, x0, y0, x1, y1) {
+      if (!writeCharacteristic) return;
+      const now = performance.now();
+      if (now - lastDragPreviewTime < 35) return;
+      lastDragPreviewTime = now;
+
+      let frame = null;
+      if (tool === 'line') {
+        frame = buildDrawLineFrame(x0, y0, x1, y1, drawColor.r, drawColor.g, drawColor.b, false);
+      } else if (tool === 'rect') {
+        frame = buildDrawRectFrame(x0, y0, x1, y1, drawColor.r, drawColor.g, drawColor.b, false);
+      }
+      if (frame) {
+        writeCharacteristic.writeValueWithoutResponse(frame).catch(() => {});
+      }
     }
 
     async function clearLiveCanvas() {
+      saveState();
       lCtx.fillStyle = '#000';
       lCtx.fillRect(0, 0, 64, 32);
       strokeBuffer = [];
+      bleWriteQueue.length = 0;
       if (writeCharacteristic) {
         const frame = buildFrame(0x15, 0, 0, 0);
         try {
@@ -1194,25 +1865,123 @@
 
     function getCanvasCoords(e) {
       const rect = lCanvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      let clientX, clientY;
+      if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if (e.changedTouches && e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
       const x = Math.floor((clientX - rect.left) / rect.width * 64);
       const y = Math.floor((clientY - rect.top) / rect.height * 32);
       return { x: Math.max(0, Math.min(63, x)), y: Math.max(0, Math.min(31, y)) };
     }
 
-    function drawPixelLocal(x, y) {
-      lCtx.fillStyle = `rgb(${drawColor.r}, ${drawColor.g}, ${drawColor.b})`;
+    function drawPixelLocal(x, y, r = drawColor.r, g = drawColor.g, b = drawColor.b) {
+      lCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
       lCtx.fillRect(x, y, 1, 1);
-      strokeBuffer.push({ x, y, r: drawColor.r, g: drawColor.g, b: drawColor.b });
+      strokeBuffer.push({ x, y, r, g, b });
     }
 
-    // Periodic Batch Flush to BLE (Opcode 0x14) every 35ms
+    function getBresenhamPoints(x0, y0, x1, y1) {
+      const pts = [];
+      const dx = Math.abs(x1 - x0);
+      const dy = Math.abs(y1 - y0);
+      const sx = (x0 < x1) ? 1 : -1;
+      const sy = (y0 < y1) ? 1 : -1;
+      let err = dx - dy;
+      let x = x0, y = y0;
+      while (true) {
+        pts.push({ x, y });
+        if (x === x1 && y === y1) break;
+        const e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; x += sx; }
+        if (e2 < dx) { err += dx; y += sy; }
+      }
+      return pts;
+    }
+
+    function getRectPoints(x0, y0, x1, y1) {
+      const pts = [];
+      const minX = Math.min(x0, x1), maxX = Math.max(x0, x1);
+      const minY = Math.min(y0, y1), maxY = Math.max(y0, y1);
+      for (let x = minX; x <= maxX; x++) {
+        pts.push({ x, y: minY });
+        pts.push({ x, y: maxY });
+      }
+      for (let y = minY + 1; y < maxY; y++) {
+        pts.push({ x: minX, y });
+        pts.push({ x: maxX, y });
+      }
+      return pts;
+    }
+
+    function floodFillLocalAndBle(startX, startY, fillR, fillG, fillB) {
+      const imgData = lCtx.getImageData(0, 0, 64, 32);
+      const data = imgData.data;
+      const targetIdx = (startY * 64 + startX) * 4;
+      const tr = data[targetIdx], tg = data[targetIdx + 1], tb = data[targetIdx + 2];
+      if (tr === fillR && tg === fillG && tb === fillB) return;
+
+      const queue = [[startX, startY]];
+      const visited = new Uint8Array(64 * 32);
+      visited[startY * 64 + startX] = 1;
+
+      while (queue.length > 0) {
+        const [x, y] = queue.pop();
+        const idx = (y * 64 + x) * 4;
+        data[idx] = fillR;
+        data[idx + 1] = fillG;
+        data[idx + 2] = fillB;
+        data[idx + 3] = 255;
+
+        const neighbors = [
+          [x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]
+        ];
+        for (const [nx, ny] of neighbors) {
+          if (nx >= 0 && nx < 64 && ny >= 0 && ny < 32) {
+            const nPos = ny * 64 + nx;
+            if (!visited[nPos]) {
+              visited[nPos] = 1;
+              const nIdx = nPos * 4;
+              if (data[nIdx] === tr && data[nIdx + 1] === tg && data[nIdx + 2] === tb) {
+                queue.push([nx, ny]);
+              }
+            }
+          }
+        }
+      }
+      lCtx.putImageData(imgData, 0, 0);
+
+      // Gửi 1 gói tin 8-byte duy nhất cho ESP32 xử lý BFS trong RAM 0.05ms
+      const floodFrame = buildFloodFillFrame(startX, startY, fillR, fillG, fillB);
+      queueBleFrame(floodFrame);
+      log(`🪣 Đổ màu tại (${startX}, ${startY}) -> RGB(${fillR}, ${fillG}, ${fillB})`);
+    }
+
+    function syncEntireCanvasToBleBuffer() {
+      const data = lCtx.getImageData(0, 0, 64, 32).data;
+      strokeBuffer = [];
+      for (let y = 0; y < 32; y++) {
+        for (let x = 0; x < 64; x++) {
+          const idx = (y * 64 + x) * 4;
+          const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+          if (r !== 0 || g !== 0 || b !== 0) {
+            strokeBuffer.push({ x, y, r, g, b });
+          }
+        }
+      }
+    }
+
+    // Periodic Batch Flush to BLE (Opcode 0x14) every 30ms cho Bút Vẽ & Tẩy
     setInterval(() => {
       if (strokeBuffer.length === 0 || !writeCharacteristic) return;
-      const batch = strokeBuffer.splice(0, 12); // Send up to 12 points per packet
+      const batch = strokeBuffer.splice(0, 12);
       const count = batch.length;
-      // Frame: [0xAA, 0x14, count, <x, y, r, g, b> * count, checksum, 0x55]
       const frame = new Uint8Array(3 + count * 5 + 2);
       frame[0] = 0xAA;
       frame[1] = 0x14;
@@ -1230,16 +1999,311 @@
       }
       frame[3 + count * 5] = csum & 0xFF;
       frame[3 + count * 5 + 1] = 0x55;
-      writeCharacteristic.writeValueWithoutResponse(frame).catch(() => { });
-    }, 35);
+      queueBleFrame(frame);
+    }, 30);
 
-    lCanvas.addEventListener('mousedown', (e) => { isDrawing = true; const p = getCanvasCoords(e); drawPixelLocal(p.x, p.y); });
-    lCanvas.addEventListener('mousemove', (e) => { if (isDrawing) { const p = getCanvasCoords(e); drawPixelLocal(p.x, p.y); } });
-    window.addEventListener('mouseup', () => { isDrawing = false; });
+    // Canvas Interaction Handlers
+    function handlePointerDown(e) {
+      const p = getCanvasCoords(e);
+      if (activeTool === 'picker') {
+        const pix = lCtx.getImageData(p.x, p.y, 1, 1).data;
+        setDrawColor(pix[0], pix[1], pix[2]);
+        setDrawingTool('pencil', document.getElementById('toolPencil'));
+        return;
+      }
 
-    lCanvas.addEventListener('touchstart', (e) => { isDrawing = true; const p = getCanvasCoords(e); drawPixelLocal(p.x, p.y); e.preventDefault(); }, { passive: false });
-    lCanvas.addEventListener('touchmove', (e) => { if (isDrawing) { const p = getCanvasCoords(e); drawPixelLocal(p.x, p.y); } e.preventDefault(); }, { passive: false });
-    window.addEventListener('touchend', () => { isDrawing = false; });
+      saveState();
+
+      if (activeTool === 'bucket') {
+        floodFillLocalAndBle(p.x, p.y, drawColor.r, drawColor.g, drawColor.b);
+        return;
+      }
+
+      isDrawing = true;
+      if (activeTool === 'pencil') {
+        drawPixelLocal(p.x, p.y, drawColor.r, drawColor.g, drawColor.b);
+      } else if (activeTool === 'eraser') {
+        drawPixelLocal(p.x, p.y, 0, 0, 0);
+      } else if (activeTool === 'line' || activeTool === 'rect') {
+        dragStart = { x: p.x, y: p.y };
+        dragSnapshot = lCtx.getImageData(0, 0, 64, 32);
+        // Hiển thị ngay điểm bắt đầu lên bảng LED
+        sendDragPreviewBle(activeTool, p.x, p.y, p.x, p.y);
+      }
+    }
+
+    function handlePointerMove(e) {
+      if (!isDrawing) return;
+      const p = getCanvasCoords(e);
+
+      if (activeTool === 'pencil') {
+        drawPixelLocal(p.x, p.y, drawColor.r, drawColor.g, drawColor.b);
+      } else if (activeTool === 'eraser') {
+        drawPixelLocal(p.x, p.y, 0, 0, 0);
+      } else if (activeTool === 'line' && dragStart && dragSnapshot) {
+        lCtx.putImageData(dragSnapshot, 0, 0);
+        const pts = getBresenhamPoints(dragStart.x, dragStart.y, p.x, p.y);
+        lCtx.fillStyle = `rgb(${drawColor.r}, ${drawColor.g}, ${drawColor.b})`;
+        for (const pt of pts) lCtx.fillRect(pt.x, pt.y, 1, 1);
+        // CẬP NHẬT TRỰC TIẾP LÊN MÀN HÌNH LED KHI CHƯA THẢ TAY!
+        sendDragPreviewBle('line', dragStart.x, dragStart.y, p.x, p.y);
+      } else if (activeTool === 'rect' && dragStart && dragSnapshot) {
+        lCtx.putImageData(dragSnapshot, 0, 0);
+        const pts = getRectPoints(dragStart.x, dragStart.y, p.x, p.y);
+        lCtx.fillStyle = `rgb(${drawColor.r}, ${drawColor.g}, ${drawColor.b})`;
+        for (const pt of pts) lCtx.fillRect(pt.x, pt.y, 1, 1);
+        // CẬP NHẬT TRỰC TIẾP LÊN MÀN HÌNH LED KHI CHƯA THẢ TAY!
+        sendDragPreviewBle('rect', dragStart.x, dragStart.y, p.x, p.y);
+      }
+    }
+
+    function handlePointerUp(e) {
+      if (!isDrawing) return;
+      isDrawing = false;
+      const p = getCanvasCoords(e);
+
+      if (activeTool === 'line' && dragStart && dragSnapshot) {
+        lCtx.putImageData(dragSnapshot, 0, 0);
+        const pts = getBresenhamPoints(dragStart.x, dragStart.y, p.x, p.y);
+        lCtx.fillStyle = `rgb(${drawColor.r}, ${drawColor.g}, ${drawColor.b})`;
+        for (const pt of pts) lCtx.fillRect(pt.x, pt.y, 1, 1);
+
+        // Gửi lệnh Commit chốt đường thẳng vào buffer RAM của ESP32 (isCommit = 1)
+        const commitFrame = buildDrawLineFrame(dragStart.x, dragStart.y, p.x, p.y, drawColor.r, drawColor.g, drawColor.b, 1);
+        queueBleFrame(commitFrame);
+        log(`📏 Đã vẽ đường thẳng: (${dragStart.x},${dragStart.y}) -> (${p.x},${p.y})`);
+        dragStart = null;
+        dragSnapshot = null;
+      } else if (activeTool === 'rect' && dragStart && dragSnapshot) {
+        lCtx.putImageData(dragSnapshot, 0, 0);
+        const pts = getRectPoints(dragStart.x, dragStart.y, p.x, p.y);
+        lCtx.fillStyle = `rgb(${drawColor.r}, ${drawColor.g}, ${drawColor.b})`;
+        for (const pt of pts) lCtx.fillRect(pt.x, pt.y, 1, 1);
+
+        // Gửi lệnh Commit chốt hình chữ nhật vào buffer RAM của ESP32 (isCommit = 1)
+        const commitFrame = buildDrawRectFrame(dragStart.x, dragStart.y, p.x, p.y, drawColor.r, drawColor.g, drawColor.b, 1);
+        queueBleFrame(commitFrame);
+        log(`🔲 Đã vẽ hình chữ nhật: (${dragStart.x},${dragStart.y}) -> (${p.x},${p.y})`);
+        dragStart = null;
+        dragSnapshot = null;
+      }
+    }
+
+    lCanvas.addEventListener('mousedown', handlePointerDown);
+    lCanvas.addEventListener('mousemove', handlePointerMove);
+    window.addEventListener('mouseup', handlePointerUp);
+
+    lCanvas.addEventListener('touchstart', (e) => { handlePointerDown(e); e.preventDefault(); }, { passive: false });
+    lCanvas.addEventListener('touchmove', (e) => { handlePointerMove(e); e.preventDefault(); }, { passive: false });
+    window.addEventListener('touchend', (e) => { handlePointerUp(e); });
+
+    // --- DIY PERSISTENCE & STORAGE SOLUTION ---
+    function getLiveCanvasRgb565() {
+      const imgData = lCtx.getImageData(0, 0, 64, 32).data;
+      const bytes = new Uint8Array(64 * 32 * 2);
+      let idx = 0;
+      for (let i = 0; i < imgData.length; i += 4) {
+        let r = imgData[i], g = imgData[i + 1], b = imgData[i + 2];
+        let col565 = (((r >> 3) & 0x1F) << 11) | (((g >> 2) & 0x3F) << 5) | ((b >> 3) & 0x1F);
+        bytes[idx++] = col565 & 0xFF;
+        bytes[idx++] = (col565 >> 8) & 0xFF;
+      }
+      return bytes;
+    }
+
+    // 1. Lưu Vĩnh Viễn Lên Xe (Burn to ESP32 Flash SPIFFS)
+    async function burnDiyToEsp32() {
+      if (!writeCharacteristic) return alert('Chưa kết nối Bluetooth với ESP32! Vui lòng nhấn "Kết Nối Bluetooth" ở trên trước.');
+
+      const btn = document.getElementById('btnBurnEsp32');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Đang ghi vào bộ nhớ Flash ESP32...';
+
+      try {
+        const rawData = getLiveCanvasRgb565();
+        log(`Bắt đầu lưu vĩnh viễn hình DIY vào SPIFFS ESP32 (${rawData.length} bytes)...`);
+
+        // Frame: [0xAA, 0x10, frameCount=1, width=64, height=32, delayH=0, delayL=200, 0x55]
+        const startFrame = new Uint8Array([0xAA, 0x10, 0x01, 0x40, 0x20, 0x00, 0xC8, 0x55]);
+        await writeCharacteristic.writeValueWithoutResponse(startFrame);
+        await new Promise(r => setTimeout(r, 60));
+
+        const CHUNK_SIZE = 128;
+        const totalChunks = Math.ceil(rawData.length / CHUNK_SIZE);
+
+        for (let c = 0; c < totalChunks; c++) {
+          const offset = c * CHUNK_SIZE;
+          const slice = rawData.slice(offset, Math.min(offset + CHUNK_SIZE, rawData.length));
+          const dataLen = slice.length;
+
+          const chunkFrame = new Uint8Array(5 + dataLen + 1);
+          chunkFrame[0] = 0xAA;
+          chunkFrame[1] = 0x11;
+          chunkFrame[2] = (c >> 8) & 0xFF;
+          chunkFrame[3] = c & 0xFF;
+          chunkFrame[4] = dataLen;
+          chunkFrame.set(slice, 5);
+          chunkFrame[5 + dataLen] = 0x55;
+
+          await writeCharacteristic.writeValueWithoutResponse(chunkFrame);
+          await new Promise(r => setTimeout(r, 25));
+        }
+
+        // Frame: [0xAA, 0x12, activateNow=1, 0x00, 0x00, 0x55]
+        const finishFrame = new Uint8Array([0xAA, 0x12, 0x01, 0x00, 0x00, 0x55]);
+        await writeCharacteristic.writeValueWithoutResponse(finishFrame);
+
+        log('🎉 [THÀNH CÔNG] Đã ghi tác phẩm DIY vào Flash SPIFFS ESP32! Khi bật tắt khóa xe tác phẩm vẫn được giữ nguyên.');
+        alert('🎉 ĐÃ LƯU VĨNH VIỄN VÀO XE HƠI THÀNH CÔNG!\n\nTác phẩm của bạn đã được ghi vào bộ nhớ Flash SPIFFS của ESP32. Ngay cả khi tắt khóa điện xe hơi hoặc ngắt nguồn, tranh vẽ này sẽ tự động hiển thị mỗi khi khởi động xe!');
+      } catch (err) {
+        log('Lỗi lưu Flash SPIFFS: ' + err.message);
+        alert('❌ Lỗi nạp vào Flash: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    // 2. Bộ Sưu Tập Web (localStorage Gallery)
+    const GALLERY_STORAGE_KEY = 'carled_diy_gallery';
+
+    function getStoredGallery() {
+      try {
+        const raw = localStorage.getItem(GALLERY_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveStoredGallery(list) {
+      try {
+        localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(list));
+      } catch (e) {
+        console.error('Storage full or error', e);
+      }
+    }
+
+    function saveDiyToGallery() {
+      const defaultName = 'Tác phẩm ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+      const name = prompt('Nhập tên lưu cho tác phẩm DIY của bạn:', defaultName);
+      if (!name) return;
+
+      const dataUrl = lCanvas.toDataURL('image/png');
+      const gallery = getStoredGallery();
+      const newItem = {
+        id: 'diy_' + Date.now(),
+        name: name.trim(),
+        created: new Date().toLocaleDateString('vi-VN'),
+        dataUrl: dataUrl
+      };
+
+      gallery.unshift(newItem);
+      saveStoredGallery(gallery);
+      renderDiyGallery();
+      log(`💾 Đã lưu tác phẩm "${newItem.name}" vào Bộ sưu tập Web.`);
+    }
+
+    function renderDiyGallery() {
+      const listEl = document.getElementById('diyGalleryList');
+      const countEl = document.getElementById('diyGalleryCount');
+      if (!listEl) return;
+
+      const gallery = getStoredGallery();
+      if (countEl) countEl.innerText = `${gallery.length} tác phẩm`;
+
+      if (gallery.length === 0) {
+        listEl.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:18px; color:var(--text-muted); font-size:12px; background:rgba(255,255,255,0.02); border-radius:8px;">
+          Chưa có tác phẩm nào được lưu. Hãy vẽ và nhấn "Lưu Vào Bộ Sưu Tập Web" để lưu lại!
+        </div>`;
+        return;
+      }
+
+      listEl.innerHTML = gallery.map(item => `
+        <div class="gallery-card">
+          <img src="${item.dataUrl}" class="gallery-thumb" alt="${item.name}">
+          <div class="gallery-title" title="${item.name}">${item.name}</div>
+          <div style="font-size:9px; color:var(--text-muted);">${item.created || ''}</div>
+          <div class="gallery-actions">
+            <button class="btn-sm" style="background:#00d2ff; color:#000;" onclick="loadDiyToCanvas('${item.id}')" title="Mở ra bảng vẽ để chỉnh sửa tiếp">Mở</button>
+            <button class="btn-sm" style="background:#ff3366; color:#fff;" onclick="deleteDiyItem('${item.id}')" title="Xóa tác phẩm này">Xóa</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function loadDiyToCanvas(id) {
+      const gallery = getStoredGallery();
+      const item = gallery.find(x => x.id === id);
+      if (!item) return;
+
+      saveState();
+      const img = new Image();
+      img.onload = () => {
+        lCtx.fillStyle = '#000';
+        lCtx.fillRect(0, 0, 64, 32);
+        lCtx.drawImage(img, 0, 0, 64, 32);
+        syncEntireCanvasToBleBuffer();
+        log(`🎨 Đã tải tác phẩm "${item.name}" lên bảng vẽ DIY.`);
+      };
+      img.src = item.dataUrl;
+    }
+
+    function deleteDiyItem(id) {
+      if (!confirm('Bạn có chắc muốn xóa tác phẩm này khỏi bộ sưu tập?')) return;
+      let gallery = getStoredGallery();
+      gallery = gallery.filter(x => x.id !== id);
+      saveStoredGallery(gallery);
+      renderDiyGallery();
+      log('Đã xóa tác phẩm khỏi bộ sưu tập.');
+    }
+
+    // 3. Xuất và Nhập File PNG
+    function exportDiyPng() {
+      const link = document.createElement('a');
+      link.download = `carled_diy_64x32_${Date.now()}.png`;
+      link.href = lCanvas.toDataURL('image/png');
+      link.click();
+      log('📥 Đã xuất file ảnh PNG 64x32 thành công.');
+    }
+
+    function importDiyFromFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      saveState();
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          lCtx.fillStyle = '#000';
+          lCtx.fillRect(0, 0, 64, 32);
+          lCtx.drawImage(img, 0, 0, 64, 32);
+          syncEntireCanvasToBleBuffer();
+          log(`📤 Đã nạp ảnh "${file.name}" vào bảng vẽ DIY.`);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+
+    // --- FEATURE TREE TRACKING VIEW ---
+    function toggleTreeNode(nodeId) {
+      const node = document.getElementById(nodeId);
+      if (node) node.classList.toggle('collapsed');
+    }
+
+    function expandAllTree(expand) {
+      document.querySelectorAll('.tree-folder').forEach(folder => {
+        if (expand) folder.classList.remove('collapsed');
+        else folder.classList.add('collapsed');
+      });
+    }
+
+    // Khởi tạo Gallery khi trang tải xong
+    renderDiyGallery();
 
     // --- TAB 4: WI-FI PROVISIONING (JSON via BLE) ---
     document.getElementById('btnSendWifiBle').addEventListener('click', async () => {

@@ -22,7 +22,11 @@ enum BleBinaryOpcode : uint8_t {
     BLE_CMD_PROJECTION_FINISH  = 0x12, // Finalize, store to SPIFFS, and activate
     BLE_CMD_DRAW_PIXEL         = 0x13, // Interactive live pencil canvas: x, y, r, g, b
     BLE_CMD_DRAW_BATCH         = 0x14, // Batch live pencil canvas: count, [x, y, r, g, b] * count
-    BLE_CMD_CANVAS_CLEAR       = 0x15  // Switch to blank black board for live drawing
+    BLE_CMD_CANVAS_CLEAR       = 0x15, // Switch to blank black board for live drawing
+    BLE_CMD_CANVAS_FILL        = 0x16, // Fill entire canvas with color: r, g, b
+    BLE_CMD_DRAW_LINE          = 0x17, // Interactive Line: x0, y0, x1, y1, r, g, b, isCommit
+    BLE_CMD_DRAW_RECT          = 0x18, // Interactive Rect: x0, y0, x1, y1, r, g, b, isCommit
+    BLE_CMD_FLOOD_FILL         = 0x19  // Bucket Flood Fill: x, y, r, g, b
 };
 
 #include "storage/StorageManager.h"
@@ -47,6 +51,9 @@ private:
     bool deviceConnected;
     unsigned long advertisingStartTime;
     bool isFastAdvertising;
+    uint16_t currentConnHandle;
+    unsigned long connectedTime;
+    bool connParamsUpdated;
 
     // Buffer for chunked pixel art / animation transfer (Flow 2)
     ProjectionHeader transferHeader;

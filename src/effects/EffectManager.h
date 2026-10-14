@@ -7,6 +7,7 @@
 #include "ChaseEffect.h"
 #include "CustomProjectionEffect.h"
 #include "MarqueeTextEffect.h"
+#include "TurnSignalEffect.h"
 #include <vector>
 #include <memory>
 
@@ -21,6 +22,7 @@ public:
     IEffect* getCurrentEffect();
     CustomProjectionEffect& getCustomEffect() { return customEffect; }
     MarqueeTextEffect& getMarqueeEffect() { return marqueeEffect; }
+    TurnSignalEffect& getTurnSignalEffect() { return turnSignalEffect; }
 
 private:
     EffectManager();
@@ -33,6 +35,7 @@ private:
     ChaseEffect chaseEffect;
     CustomProjectionEffect customEffect;
     MarqueeTextEffect marqueeEffect;
+    TurnSignalEffect turnSignalEffect;
 
     unsigned long lastFrameTime;
 };

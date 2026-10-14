@@ -1,5 +1,6 @@
 #include "CustomProjectionEffect.h"
 #include "drivers/LedDriver.h"
+#include "storage/DefaultCarPattern.h"
 #include "utils/Logger.h"
 
 #define TAG "PROJECTION"
@@ -23,7 +24,16 @@ void CustomProjectionEffect::init() {
     // Reload saved pattern from flash if uninitialized or if returning from live drawing
     if (!hasValidPattern || isLiveDrawingActive) {
         if (!loadFromFlash(DEFAULT_PATTERN_PATH)) {
-            LOG_W(TAG, "No default pattern found in SPIFFS flash");
+            LOG_I(TAG, "Loading default Car mascot animation from PROGMEM ROM");
+            ProjectionHeader header;
+            header.magic = PROJECTION_MAGIC;
+            header.version = 2;
+            header.frameCount = DEFAULT_CAR_FRAME_COUNT;
+            header.width = DEFAULT_CAR_WIDTH;
+            header.height = DEFAULT_CAR_HEIGHT;
+            header.frameDelayMs = DEFAULT_CAR_DELAY_MS;
+            header.colorFormat = 0;
+            setFrames(header, reinterpret_cast<const uint8_t*>(DEFAULT_CAR_PIXELS), sizeof(DEFAULT_CAR_PIXELS));
         }
     }
 }
@@ -129,6 +139,169 @@ void CustomProjectionEffect::resetToBlankCanvas() {
     LedDriver::getInstance().clear();
 }
 
+void CustomProjectionEffect::fillCanvas(uint16_t color565) {
+    if (!isLiveDrawingActive) {
+        resetToBlankCanvas();
+    }
+
+    if (xSemaphoreTake(frameMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+        if (!pixelBuffer.empty()) {
+            std::fill(pixelBuffer.begin(), pixelBuffer.end(), color565);
+        }
+        needsRedraw = true;
+        xSemaphoreGive(frameMutex);
+    }
+    LedDriver::getInstance().fill(color565);
+}
+
+void CustomProjectionEffect::drawLiveLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color565, bool isCommit) {
+    if (!isLiveDrawingActive) {
+        resetToBlankCanvas();
+    }
+
+    if (!isCommit) {
+        // Real-time drag preview: re-blit current pixelBuffer, then overlay the preview line
+        if (xSemaphoreTake(frameMutex, pdMS_TO_TICKS(20)) == pdTRUE) {
+            if (!pixelBuffer.empty()) {
+                LedDriver::getInstance().drawBitmap(0, 0, pixelBuffer.data(), 64, 32);
+            }
+            xSemaphoreGive(frameMutex);
+        }
+        LedDriver::getInstance().drawLine(x0, y0, x1, y1, color565);
+    } else {
+        // Commit line to pixelBuffer
+        if (xSemaphoreTake(frameMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+            int16_t dx = abs(x1 - x0);
+            int16_t dy = abs(y1 - y0);
+            int16_t sx = (x0 < x1) ? 1 : -1;
+            int16_t sy = (y0 < y1) ? 1 : -1;
+            int16_t err = dx - dy;
+            int16_t x = x0, y = y0;
+            while (true) {
+                if (x >= 0 && x < 64 && y >= 0 && y < 32) {
+                    size_t idx = y * 64 + x;
+                    if (idx < pixelBuffer.size()) {
+                        pixelBuffer[idx] = color565;
+                    }
+                }
+                if (x == x1 && y == y1) break;
+                int16_t e2 = 2 * err;
+                if (e2 > -dy) { err -= dy; x += sx; }
+                if (e2 < dx) { err += dx; y += sy; }
+            }
+            needsRedraw = true;
+            xSemaphoreGive(frameMutex);
+        }
+        LedDriver::getInstance().drawLine(x0, y0, x1, y1, color565);
+    }
+}
+
+void CustomProjectionEffect::drawLiveRect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color565, bool isCommit) {
+    if (!isLiveDrawingActive) {
+        resetToBlankCanvas();
+    }
+
+    int16_t rx = std::min(x0, x1);
+    int16_t ry = std::min(y0, y1);
+    int16_t rw = abs(x1 - x0) + 1;
+    int16_t rh = abs(y1 - y0) + 1;
+
+    if (!isCommit) {
+        // Real-time drag preview: re-blit current pixelBuffer, then overlay preview rect
+        if (xSemaphoreTake(frameMutex, pdMS_TO_TICKS(20)) == pdTRUE) {
+            if (!pixelBuffer.empty()) {
+                LedDriver::getInstance().drawBitmap(0, 0, pixelBuffer.data(), 64, 32);
+            }
+            xSemaphoreGive(frameMutex);
+        }
+        LedDriver::getInstance().drawRect(rx, ry, rw, rh, color565);
+    } else {
+        // Commit rectangle outline to pixelBuffer
+        if (xSemaphoreTake(frameMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+            int16_t minX = std::min(x0, x1);
+            int16_t maxX = std::max(x0, x1);
+            int16_t minY = std::min(y0, y1);
+            int16_t maxY = std::max(y0, y1);
+
+            for (int16_t x = minX; x <= maxX; x++) {
+                if (x >= 0 && x < 64) {
+                    if (minY >= 0 && minY < 32) pixelBuffer[minY * 64 + x] = color565;
+                    if (maxY >= 0 && maxY < 32) pixelBuffer[maxY * 64 + x] = color565;
+                }
+            }
+            for (int16_t y = minY; y <= maxY; y++) {
+                if (y >= 0 && y < 32) {
+                    if (minX >= 0 && minX < 64) pixelBuffer[y * 64 + minX] = color565;
+                    if (maxX >= 0 && maxX < 64) pixelBuffer[y * 64 + maxX] = color565;
+                }
+            }
+            needsRedraw = true;
+            xSemaphoreGive(frameMutex);
+        }
+        LedDriver::getInstance().drawRect(rx, ry, rw, rh, color565);
+    }
+}
+
+void CustomProjectionEffect::floodFill(int16_t startX, int16_t startY, uint16_t newColor565) {
+    if (startX < 0 || startX >= 64 || startY < 0 || startY >= 32) return;
+
+    if (!isLiveDrawingActive) {
+        resetToBlankCanvas();
+    }
+
+    if (xSemaphoreTake(frameMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+        if (pixelBuffer.size() >= 2048) {
+            uint16_t targetColor = pixelBuffer[startY * 64 + startX];
+            if (targetColor != newColor565) {
+                // BFS Queue with pre-allocated storage (max 2048 nodes)
+                static uint16_t qx[2048];
+                static uint16_t qy[2048];
+                static bool visited[2048];
+                memset(visited, 0, sizeof(visited));
+
+                size_t head = 0, tail = 0;
+                qx[tail] = startX;
+                qy[tail] = startY;
+                tail++;
+                visited[startY * 64 + startX] = true;
+
+                while (head < tail) {
+                    int16_t cx = qx[head];
+                    int16_t cy = qy[head];
+                    head++;
+                    pixelBuffer[cy * 64 + cx] = newColor565;
+
+                    const int16_t dx[4] = {1, -1, 0, 0};
+                    const int16_t dy[4] = {0, 0, 1, -1};
+                    for (int i = 0; i < 4; i++) {
+                        int16_t nx = cx + dx[i];
+                        int16_t ny = cy + dy[i];
+                        if (nx >= 0 && nx < 64 && ny >= 0 && ny < 32) {
+                            size_t nIdx = ny * 64 + nx;
+                            if (!visited[nIdx] && pixelBuffer[nIdx] == targetColor) {
+                                visited[nIdx] = true;
+                                qx[tail] = nx;
+                                qy[tail] = ny;
+                                tail++;
+                            }
+                        }
+                    }
+                }
+                needsRedraw = true;
+            }
+        }
+        xSemaphoreGive(frameMutex);
+    }
+
+    // Immediately blit updated pixelBuffer to LED matrix
+    if (xSemaphoreTake(frameMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+        if (!pixelBuffer.empty()) {
+            LedDriver::getInstance().drawBitmap(0, 0, pixelBuffer.data(), 64, 32);
+        }
+        xSemaphoreGive(frameMutex);
+    }
+}
+
 void CustomProjectionEffect::clearFrames() {
     if (xSemaphoreTake(frameMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
         pixelBuffer.clear();
@@ -147,9 +320,15 @@ void CustomProjectionEffect::update(const DeviceSettings& settings) {
     if (!hasValidPattern && !isLiveDrawingActive) {
         // Attempt lazy load once if uninitialized
         if (!loadFromFlash(DEFAULT_PATTERN_PATH)) {
-            led.clear();
-            led.drawText(4, 12, "NO PATTERN", LedDriver::color565(255, 50, 50), 1);
-            return;
+            ProjectionHeader header;
+            header.magic = PROJECTION_MAGIC;
+            header.version = 2;
+            header.frameCount = DEFAULT_CAR_FRAME_COUNT;
+            header.width = DEFAULT_CAR_WIDTH;
+            header.height = DEFAULT_CAR_HEIGHT;
+            header.frameDelayMs = DEFAULT_CAR_DELAY_MS;
+            header.colorFormat = 0;
+            setFrames(header, reinterpret_cast<const uint8_t*>(DEFAULT_CAR_PIXELS), sizeof(DEFAULT_CAR_PIXELS));
         }
     }
 

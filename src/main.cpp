@@ -9,6 +9,7 @@
 #include "network/WifiManager.h"
 #include "network/MqttManager.h"
 #include "network/OtaManager.h"
+#include "core/CarSignalService.h"
 
 #define TAG "MAIN"
 
@@ -33,34 +34,8 @@ void ledTask(void* parameter) {
     LOG_I(TAG, "LED Render Task started on Core %d", xPortGetCoreID());
     TickType_t lastWakeTime = xTaskGetTickCount();
     const TickType_t frameDelay = pdMS_TO_TICKS(16); // ~60 FPS
-    bool lastEmergencyState = false;
 
     for (;;) {
-        if (g_isEmergencyStopped) {
-            if (!lastEmergencyState) {
-                LedDriver::getInstance().clear();
-                LOG_W("E_STOP", ">>> EMERGENCY STOP TRIGGERED! Telemetry event dispatched. <<<");
-                lastEmergencyState = true;
-                StateManager::getInstance().setEmergencyStopped(true);
-
-                // Gửi event và Telemetry qua BLE & MQTT
-                BleManager::getInstance().sendStatusNotification("{\"event\":\"emergency_stop\",\"active\":true,\"message\":\"EMERGENCY STOP TRIGGERED: Matrix Blanked\"}");
-                MqttManager::getInstance().publishStatus("{\"emergency_stop\":true,\"power\":false,\"event\":\"emergency_stop\"}");
-            }
-            vTaskDelay(pdMS_TO_TICKS(50));
-            continue;
-        }
-
-        if (lastEmergencyState) {
-            LOG_I("E_STOP", ">>> Emergency Stop Released. Telemetry event dispatched. <<<");
-            lastEmergencyState = false;
-            StateManager::getInstance().setEmergencyStopped(false);
-
-            // Gửi event khôi phục qua BLE & MQTT
-            BleManager::getInstance().sendStatusNotification("{\"event\":\"emergency_stop\",\"active\":false,\"message\":\"Emergency Stop Released: Resuming normal operation\"}");
-            MqttManager::getInstance().publishStatus("{\"emergency_stop\":false,\"power\":true,\"event\":\"emergency_release\"}");
-        }
-
         EffectManager::getInstance().update();
         vTaskDelayUntil(&lastWakeTime, frameDelay);
     }
@@ -100,7 +75,10 @@ void setup() {
     MqttManager::getInstance().init();
     OtaManager::getInstance().init();
 
-    // 8. Spawn high-priority LED Render Task on Core 1
+    // 8. Initialize Automotive Signal Service (Simulator & Signal Processor)
+    CarSignalService::getInstance().init();
+
+    // 9. Spawn high-priority LED Render Task on Core 1
     xTaskCreatePinnedToCore(
         ledTask,
         "LedTask",
@@ -115,7 +93,10 @@ void setup() {
 }
 
 void loop() {
-    // Background polling on Core 0
+    // 1. Process Car Signals & Serial Simulator
+    CarSignalService::getInstance().update();
+
+    // 2. Background polling on Core 0
     BleManager::getInstance().update();
     WifiManager::getInstance().update();
     MqttManager::getInstance().update();
