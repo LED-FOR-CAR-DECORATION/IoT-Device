@@ -117,3 +117,14 @@ Chi tiết sơ đồ lắp đặt mạch an toàn ô tô xem tại: [`docs/hardw
 ## 📱 Kết nối với Mobile App
 
 Xem tài liệu đặc tả các cổng BLE Characteristic và cấu trúc gói tin JSON tại: [`docs/api_protocol.md`](docs/api_protocol.md).
+
+
+## Khôi phục cài đặt gốc bằng nút BOOT
+
+Khi ESP32 đang chạy, giữ nút **BOOT (GPIO 0)** liên tục ít nhất **5 giây**, rồi thả nút khi thiết bị khởi động lại. Bấm ngắn hoặc thả trước thời hạn sẽ không reset. Nếu BOOT vẫn bị giữ qua lần khởi động lại, firmware yêu cầu thả nút trước khi cho phép thao tác reset tiếp theo.
+
+Factory reset xóa tên Bluetooth tùy chỉnh, cấu hình LED, Wi-Fi người dùng đã lưu và ảnh/animation trên SPIFFS. Thiết bị trở về tên **CarLED-Ambient**, độ sáng mặc định và hình ô tô xanh. Wi-Fi trở về giá trị mặc định được biên dịch trong firmware. Gallery/profile trong điện thoại không bị xóa.
+
+Nút **RST/EN** chỉ khởi động lại và giữ dữ liệu. Giữ BOOT trong lúc bật nguồn hoặc bấm RST có thể đưa ESP32 vào chế độ nạp firmware; thao tác factory reset phải thực hiện khi firmware đang chạy.
+
+Yêu cầu reset được lưu trước khi khởi động lại; dữ liệu chỉ được xóa ở đầu lần khởi động kế tiếp, trước khi BLE, Wi-Fi và tác vụ vẽ chạy. Nếu bị mất nguồn giữa chừng, firmware tiếp tục hoàn tất reset ở lần khởi động sau.

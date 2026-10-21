@@ -1,4 +1,5 @@
 #include "BleManager.h"
+#include <Preferences.h>
 #include "config.h"
 #include "core/StateManager.h"
 #include "effects/EffectManager.h"
@@ -54,6 +55,14 @@ void BleManager::configureAdvertising(bool fast) {
     NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
     pAdvertising->stop();
 
+    NimBLEAdvertisementData advertisement;
+    advertisement.setFlags(0x06);
+    advertisement.setCompleteServices(NimBLEUUID(BLE_SERVICE_UUID));
+    NimBLEAdvertisementData response;
+    response.setName(deviceName.c_str());
+    pAdvertising->setAdvertisementData(advertisement);
+    pAdvertising->setScanResponseData(response);
+
     if (fast) {
         // Fast advertising: 20ms - 30ms interval (32 - 48 units of 0.625ms)
         pAdvertising->setMinInterval(32);
@@ -76,7 +85,14 @@ void BleManager::configureAdvertising(bool fast) {
 }
 
 void BleManager::init() {
-    NimBLEDevice::init(DEVICE_NAME);
+    Preferences identity;
+    deviceName = DEVICE_NAME;
+    if (identity.begin("ble_identity", true)) {
+        String stored = identity.getString("name", DEVICE_NAME);
+        if (stored.length() > 0 && stored.length() <= 29) deviceName = stored;
+        identity.end();
+    }
+    NimBLEDevice::init(deviceName.c_str());
     NimBLEDevice::setPower(ESP_PWR_LVL_P9); // +9dBm max TX power for cabin coverage
     NimBLEDevice::setMTU(256);              // Support up to 256 MTU when requested by client
 
@@ -108,7 +124,7 @@ void BleManager::init() {
     // Start with Fast Advertising for immediate startup discovery
     configureAdvertising(true);
 
-    LOG_I(TAG, "BLE initialized and advertising as '%s'", DEVICE_NAME);
+    LOG_I(TAG, "BLE initialized and advertising as '%s'", deviceName.c_str());
 }
 
 void BleManager::handleIncomingCommand(const uint8_t* data, size_t length) {
@@ -525,6 +541,38 @@ void BleManager::handleJsonPayload(const std::string& commandStr) {
         return;
     }
 
+    const String command = doc["command"] | "";
+    if (command == "rename_device" || command == "get_device_info") {
+        JsonDocument reply;
+        reply["request_id"] = doc["request_id"] | "";
+        reply["event"] = "device_name";
+        if (command == "rename_device") {
+            String proposed = doc["name"] | "";
+            proposed.trim();
+            bool valid = proposed.length() > 0 && proposed.length() <= 29;
+            for (size_t i = 0; i < proposed.length(); ++i)
+                if ((uint8_t)proposed[i] < 32 || (uint8_t)proposed[i] == 127) valid = false;
+            bool saved = false;
+            if (valid) {
+                Preferences identity;
+                if (identity.begin("ble_identity", false)) {
+                    saved = identity.putString("name", proposed) == proposed.length();
+                    identity.end();
+                }
+            }
+            if (saved) {
+                deviceName = proposed;
+                NimBLEDevice::setDeviceName(deviceName.c_str());
+            } else {
+                reply["error"] = valid ? "Không lưu được tên trên LED" : "Tên phải có 1–29 byte UTF-8 và không có ký tự điều khiển";
+            }
+        }
+        reply["name"] = deviceName;
+        String payload;
+        serializeJson(reply, payload);
+        sendStatusNotification(payload);
+        return;
+    }
     StateManager& state = StateManager::getInstance();
 
     if (doc["power"].is<bool>()) {

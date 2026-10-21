@@ -49,6 +49,7 @@ private:
     NimBLEServer* pServer;
     NimBLECharacteristic* pControlCharacteristic;
     NimBLECharacteristic* pStatusCharacteristic;
+    String deviceName;
     bool deviceConnected;
     unsigned long advertisingStartTime;
     bool isFastAdvertising;

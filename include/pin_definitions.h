@@ -23,3 +23,6 @@
 
 // Emergency Stop (E-Stop) Button (Pin NO -> GPIO 32, Pin C -> GND)
 #define PIN_E_STOP              32
+
+// On-board BOOT button, active LOW. Hold while firmware is running.
+#define PIN_FACTORY_RESET       0

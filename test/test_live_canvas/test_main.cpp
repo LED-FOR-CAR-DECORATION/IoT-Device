@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <unity.h>
+#include "core/FactoryResetButton.h"
 #include "effects/EffectManager.h"
 #include "utils/ColorUtils.h"
 
@@ -37,9 +38,51 @@ void test_batches_invalidate_renderer_and_reject_invalid_batch_atomically() {
     TEST_ASSERT_EQUAL_HEX16(0x07e0,LiveCanvasTestProbe::pixel(canvas,3,3));
 }
 
+void test_factory_reset_requires_continuous_five_second_hold() {
+    FactoryResetButton button;
+    TEST_ASSERT_FALSE(button.update(false, 0));
+    TEST_ASSERT_FALSE(button.update(true, 100));
+    TEST_ASSERT_FALSE(button.update(true, 130));
+    TEST_ASSERT_FALSE(button.update(true, 5129));
+    TEST_ASSERT_TRUE(button.update(true, 5130));
+    TEST_ASSERT_FALSE(button.update(true, 9000));
+}
+
+void test_factory_reset_short_press_release_and_bounce_cancel_hold() {
+    FactoryResetButton button;
+    button.update(false, 0);
+    button.update(true, 100);
+    TEST_ASSERT_FALSE(button.update(false, 110));
+    TEST_ASSERT_FALSE(button.update(false, 6000));
+    button.update(true, 6100);
+    button.update(true, 6130);
+    TEST_ASSERT_FALSE(button.update(false, 10000));
+    button.update(false, 10030);
+    button.update(true, 11000);
+    button.update(true, 11030);
+    TEST_ASSERT_FALSE(button.update(true, 16029));
+    TEST_ASSERT_TRUE(button.update(true, 16030));
+}
+
+void test_factory_reset_survives_millis_wrap_and_requires_release_after_reboot() {
+    FactoryResetButton button;
+    TEST_ASSERT_FALSE(button.update(true, 0));
+    TEST_ASSERT_FALSE(button.update(true, 30));
+    TEST_ASSERT_FALSE(button.update(true, 6000));
+    button.update(false, 6100);
+    button.update(false, 6130);
+    button.update(true, UINT32_MAX - 100);
+    button.update(true, UINT32_MAX - 70);
+    TEST_ASSERT_FALSE(button.update(true, 4928));
+    TEST_ASSERT_TRUE(button.update(true, 4929));
+}
+
 void setup() {
     delay(1500);
     UNITY_BEGIN();
+    RUN_TEST(test_factory_reset_requires_continuous_five_second_hold);
+    RUN_TEST(test_factory_reset_short_press_release_and_bounce_cancel_hold);
+    RUN_TEST(test_factory_reset_survives_millis_wrap_and_requires_release_after_reboot);
     RUN_TEST(test_repeated_mode_selection_preserves_previous_strokes);
     RUN_TEST(test_batches_invalidate_renderer_and_reject_invalid_batch_atomically);
     UNITY_END();

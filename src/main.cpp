@@ -10,11 +10,14 @@
 #include "network/MqttManager.h"
 #include "network/OtaManager.h"
 #include "core/CarSignalService.h"
+#include "core/FactoryReset.h"
+#include "core/FactoryResetButton.h"
 
 #define TAG "MAIN"
 
 // Task handles
 TaskHandle_t ledTaskHandle = nullptr;
+static FactoryResetButton factoryResetButton;
 
 // Emergency Stop (E-Stop) State & Debounce
 static volatile bool g_isEmergencyStopped = false;
@@ -45,6 +48,10 @@ void setup() {
     // 1. Initialize Logger
     Logger::init(115200);
     LOG_I(TAG, "=== %s v%s Starting ===", DEVICE_NAME, FIRMWARE_VERSION);
+
+    // Finish destructive reset before any service can write user data.
+    while (!FactoryReset::completePending()) delay(1000);
+    pinMode(PIN_FACTORY_RESET, INPUT_PULLUP);
 
     // 2. Configure Hardware Emergency Stop (E-Stop)
     pinMode(PIN_E_STOP, INPUT_PULLUP);
@@ -93,6 +100,10 @@ void setup() {
 }
 
 void loop() {
+    if (factoryResetButton.update(digitalRead(PIN_FACTORY_RESET) == LOW, millis())) {
+        FactoryReset::request();
+    }
+
     // 1. Process Car Signals & Serial Simulator
     CarSignalService::getInstance().update();
 
