@@ -12,7 +12,7 @@ EffectManager& EffectManager::getInstance() {
 }
 
 EffectManager::EffectManager() 
-    : activeEffect(&customEffect), lastFrameTime(0) {}
+    : activeEffect(&customEffect), lastFrameTime(0), displayOverridden(false) {}
 
 void EffectManager::init() {
     staticEffect.init();
@@ -28,6 +28,9 @@ void EffectManager::init() {
 }
 
 void EffectManager::setMode(EffectMode mode) {
+    // Every BLE drawing packet selects CUSTOM_PRESET. Reinitializing the already
+    // active custom effect would reload flash and erase all previous live strokes.
+    if ((mode == EffectMode::CUSTOM_PRESET || mode == EffectMode::WELCOME_CAR) && activeEffect == &customEffect) return;
     switch (mode) {
         case EffectMode::STATIC_COLOR:
             activeEffect = &staticEffect;
@@ -80,6 +83,7 @@ void EffectManager::update() {
     LedDriver& led = LedDriver::getInstance();
 
     if (!settings.powerOn) {
+        displayOverridden = true;
         led.clear();
         led.show();
         return;
@@ -91,12 +95,18 @@ void EffectManager::update() {
     // 1. Automotive Turn Signal Priority Override (Safety First)
     CarSignalService& carSignal = CarSignalService::getInstance();
     if (carSignal.isActive()) {
+        displayOverridden = true;
         turnSignalEffect.setSignalState(carSignal.getState());
         turnSignalEffect.update(settings);
         led.show();
         return;
     } else {
         turnSignalEffect.setSignalState(TurnSignalState::IDLE);
+    }
+
+    if (displayOverridden) {
+        customEffect.requestRedraw();
+        displayOverridden = false;
     }
 
     // 2. Render active standard animation

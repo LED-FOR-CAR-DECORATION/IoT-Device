@@ -26,7 +26,8 @@ enum BleBinaryOpcode : uint8_t {
     BLE_CMD_CANVAS_FILL        = 0x16, // Fill entire canvas with color: r, g, b
     BLE_CMD_DRAW_LINE          = 0x17, // Interactive Line: x0, y0, x1, y1, r, g, b, isCommit
     BLE_CMD_DRAW_RECT          = 0x18, // Interactive Rect: x0, y0, x1, y1, r, g, b, isCommit
-    BLE_CMD_FLOOD_FILL         = 0x19  // Bucket Flood Fill: x, y, r, g, b
+    BLE_CMD_FLOOD_FILL         = 0x19, // Bucket Flood Fill: x, y, r, g, b
+    BLE_CMD_DRAW_CONFIRMED     = 0x1A // sequence16, count, points, checksum; ACK after buffer commit
 };
 
 #include "storage/StorageManager.h"

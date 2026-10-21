@@ -213,6 +213,25 @@ void BleManager::handleBinaryFrame(const uint8_t* frame, size_t length) {
             handleDrawBatch(frame, length);
             break;
 
+        case BLE_CMD_DRAW_CONFIRMED: {
+            // [AA,1A,seqHi,seqLo,count,(x,y,r,g,b)*count,xor,55]
+            if (length < 7) break;
+            const uint8_t count = frame[4];
+            if (count > 12 || length != static_cast<size_t>(7 + count * 5)) break;
+            uint8_t checksum = 0;
+            for (size_t i = 1; i < length - 2; ++i) checksum ^= frame[i];
+            if (checksum != frame[length - 2]) break;
+            state.setMode(EffectMode::CUSTOM_PRESET);
+            EffectManager::getInstance().setMode(EffectMode::CUSTOM_PRESET);
+            auto& canvas = EffectManager::getInstance().getCustomEffect();
+            const bool applied = count == 0 ? canvas.resetToBlankCanvas() : canvas.drawLiveBatch(frame + 5, count);
+            if (applied) {
+                const uint16_t sequence = (frame[2] << 8) | frame[3];
+                sendStatusNotification("{\"event\":\"canvas_batch_applied\",\"sequence\":" + String(sequence) + "}");
+            }
+            break;
+        }
+
         case BLE_CMD_CANVAS_CLEAR:
             LOG_I(TAG, "BLE: Switching to blank black board for live drawing");
             state.setMode(EffectMode::CUSTOM_PRESET);
@@ -404,16 +423,7 @@ void BleManager::handleDrawBatch(const uint8_t* frame, size_t length) {
         return;
     }
 
-    CustomProjectionEffect& customEffect = EffectManager::getInstance().getCustomEffect();
-    for (uint8_t i = 0; i < count; i++) {
-        size_t offset = 3 + i * 5;
-        uint8_t x = frame[offset];
-        uint8_t y = frame[offset + 1];
-        uint8_t r = frame[offset + 2];
-        uint8_t g = frame[offset + 3];
-        uint8_t b = frame[offset + 4];
-        customEffect.drawLivePixel(x, y, ColorUtils::color565(r, g, b));
-    }
+    EffectManager::getInstance().getCustomEffect().drawLiveBatch(frame + 3, count);
 }
 
 void BleManager::appendAndProcessJsonChunk(const uint8_t* data, size_t length) {

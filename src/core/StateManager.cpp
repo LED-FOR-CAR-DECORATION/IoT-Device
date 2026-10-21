@@ -44,6 +44,7 @@ void StateManager::setBrightness(uint8_t brightness) {
 }
 
 void StateManager::setMode(EffectMode mode) {
+    if (currentSettings.currentMode == mode) return; // No NVS write for every live packet.
     currentSettings.currentMode = mode;
     isDirty = true;
     saveToNVS();

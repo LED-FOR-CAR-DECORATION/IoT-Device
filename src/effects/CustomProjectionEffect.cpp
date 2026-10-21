@@ -2,6 +2,7 @@
 #include "drivers/LedDriver.h"
 #include "storage/DefaultCarPattern.h"
 #include "utils/Logger.h"
+#include "utils/ColorUtils.h"
 
 #define TAG "PROJECTION"
 
@@ -93,32 +94,38 @@ bool CustomProjectionEffect::setFrames(const ProjectionHeader& header, const uin
 }
 
 void CustomProjectionEffect::drawLivePixel(int16_t x, int16_t y, uint16_t color565) {
-    if (x < 0 || x >= currentHeader.width || y < 0 || y >= currentHeader.height) {
-        return;
-    }
-
-    // Auto-reset to pure blank black canvas if drawing starts while an image was displayed
-    if (!isLiveDrawingActive) {
-        resetToBlankCanvas();
-    }
-
-    if (xSemaphoreTake(frameMutex, pdMS_TO_TICKS(20)) == pdTRUE) {
-        if (hasValidPattern && !pixelBuffer.empty()) {
-            size_t idx = (currentFrameIndex * (currentHeader.width * currentHeader.height)) + (y * currentHeader.width + x);
-            if (idx < pixelBuffer.size()) {
-                pixelBuffer[idx] = color565;
-            }
-        }
-        xSemaphoreGive(frameMutex);
-    }
-
-    // Direct draw to matrix for immediate 0-latency visual feedback
-    int16_t offsetX = (LedDriver::getInstance().getWidth() - currentHeader.width) / 2;
-    int16_t offsetY = (LedDriver::getInstance().getHeight() - currentHeader.height) / 2;
-    LedDriver::getInstance().drawPixel(x + offsetX, y + offsetY, color565);
+    if (x < 0 || x >= 64 || y < 0 || y >= 32) return;
+    const uint8_t r = (color565 >> 11) & 31, g = (color565 >> 5) & 63, b = color565 & 31;
+    const uint8_t point[] = {static_cast<uint8_t>(x), static_cast<uint8_t>(y),
+        static_cast<uint8_t>((r << 3) | (r >> 2)), static_cast<uint8_t>((g << 2) | (g >> 4)), static_cast<uint8_t>((b << 3) | (b >> 2))};
+    drawLiveBatch(point, 1);
 }
 
-void CustomProjectionEffect::resetToBlankCanvas() {
+bool CustomProjectionEffect::drawLiveBatch(const uint8_t* points, uint8_t count) {
+    if (!points || count == 0) return false;
+    for (uint8_t i = 0; i < count; ++i) {
+        if (points[i * 5] >= 64 || points[i * 5 + 1] >= 32) return false;
+    }
+    if (xSemaphoreTake(frameMutex, pdMS_TO_TICKS(100)) != pdTRUE) return false;
+    if (!isLiveDrawingActive) {
+        currentHeader = ProjectionHeader();
+        pixelBuffer.assign(64 * 32, 0);
+        currentFrameIndex = 0;
+        hasValidPattern = true;
+        isLiveDrawingActive = true;
+        lastRenderedFrameIndex = -1;
+    }
+    for (uint8_t i = 0; i < count; ++i) {
+        const uint8_t* p = points + i * 5;
+        pixelBuffer[p[1] * 64 + p[0]] = ColorUtils::color565(p[2], p[3], p[4]);
+    }
+    needsRedraw = true;
+    xSemaphoreGive(frameMutex);
+    // Only the effect-render task writes the DMA display, never the BLE callback.
+    return true;
+}
+
+bool CustomProjectionEffect::resetToBlankCanvas() {
     if (xSemaphoreTake(frameMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
         currentHeader.magic = PROJECTION_MAGIC;
         currentHeader.version = 1;
@@ -135,8 +142,16 @@ void CustomProjectionEffect::resetToBlankCanvas() {
         lastRenderedFrameIndex = -1;
         needsRedraw = true;
         xSemaphoreGive(frameMutex);
+        return true;
     }
-    LedDriver::getInstance().clear();
+    return false;
+}
+
+void CustomProjectionEffect::requestRedraw() {
+    if (xSemaphoreTake(frameMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+        needsRedraw = true;
+        xSemaphoreGive(frameMutex);
+    }
 }
 
 void CustomProjectionEffect::fillCanvas(uint16_t color565) {

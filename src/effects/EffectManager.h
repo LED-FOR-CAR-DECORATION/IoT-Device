@@ -38,4 +38,5 @@ private:
     TurnSignalEffect turnSignalEffect;
 
     unsigned long lastFrameTime;
+    bool displayOverridden;
 };

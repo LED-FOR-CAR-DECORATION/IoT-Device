@@ -29,6 +29,7 @@ public:
 
     // Draw single pixel in real-time (for App interactive live pencil canvas)
     void drawLivePixel(int16_t x, int16_t y, uint16_t color565);
+    bool drawLiveBatch(const uint8_t* points, uint8_t count);
 
     // Interactive shape drawing with live drag preview and commitment
     void drawLiveLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color565, bool isCommit);
@@ -39,7 +40,8 @@ public:
     void fillCanvas(uint16_t color565);
 
     // Reset to pure black blank canvas for interactive live drawing
-    void resetToBlankCanvas();
+    bool resetToBlankCanvas();
+    void requestRedraw();
 
     // Clear active projection
     void clearFrames();
@@ -50,6 +52,7 @@ public:
     uint16_t getHeight() const { return currentHeader.height; }
 
 private:
+    friend struct LiveCanvasTestProbe;
     ProjectionHeader currentHeader;
     std::vector<uint16_t> pixelBuffer; // RGB565 frames
     uint8_t currentFrameIndex;
