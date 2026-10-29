@@ -26,3 +26,7 @@
 
 // On-board BOOT button, active LOW. Hold while firmware is running.
 #define PIN_FACTORY_RESET       0
+
+// SN65HVD230 TWAI interface; GPIO4/5 are already used by HUB75.
+#define PIN_CAN_TX              21
+#define PIN_CAN_RX              22

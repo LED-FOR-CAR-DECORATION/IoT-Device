@@ -92,12 +92,32 @@ void EffectManager::update() {
     // Set brightness
     led.setBrightness(settings.brightness);
 
-    // 1. Automotive Turn Signal Priority Override (Safety First)
-    CarSignalService& carSignal = CarSignalService::getInstance();
-    if (carSignal.isActive()) {
+    // One coherent snapshot for both cores. Priority: turn/hazard > brake > reverse > stopped.
+    const auto vehicle = CarSignalService::getInstance().getSnapshot();
+    const auto vehicleDisplay = VehicleCan::display(vehicle);
+    if (vehicleDisplay != VehicleCan::Display::Normal) {
         displayOverridden = true;
-        turnSignalEffect.setSignalState(carSignal.getState());
-        turnSignalEffect.update(settings);
+        if (vehicle.turn != 0) {
+            turnSignalEffect.setSignalState(static_cast<TurnSignalState>(vehicle.turn));
+            turnSignalEffect.update(settings);
+            // Keep braking/reversing visible even while arrows have priority.
+            if (vehicle.fromCan && (vehicle.brake || vehicle.reverse)) {
+                led.drawLine(0, MATRIX_HEIGHT - 1, MATRIX_WIDTH - 1, MATRIX_HEIGHT - 1,
+                             vehicle.brake ? LedDriver::color565(255, 0, 0) : LedDriver::color565(255, 255, 255));
+            }
+        } else {
+            turnSignalEffect.setSignalState(TurnSignalState::IDLE);
+            led.clear();
+            if (vehicleDisplay == VehicleCan::Display::Brake) {
+                led.fill(255, 0, 0);
+                led.drawText(17, 12, "BRAKE", LedDriver::color565(255, 255, 255));
+            } else if (vehicleDisplay == VehicleCan::Display::Reverse) {
+                led.fill(255, 255, 255);
+                led.drawText(11, 12, "REVERSE", LedDriver::color565(0, 0, 0));
+            } else {
+                led.drawText(20, 12, "STOP", LedDriver::color565(255, 0, 0));
+            }
+        }
         led.show();
         return;
     } else {

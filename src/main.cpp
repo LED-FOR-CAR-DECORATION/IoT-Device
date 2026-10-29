@@ -82,7 +82,7 @@ void setup() {
     MqttManager::getInstance().init();
     OtaManager::getInstance().init();
 
-    // 8. Initialize Automotive Signal Service (Simulator & Signal Processor)
+    // 8. Initialize CAN receiver and fallback Serial simulator.
     CarSignalService::getInstance().init();
 
     // 9. Spawn high-priority LED Render Task on Core 1
@@ -104,7 +104,7 @@ void loop() {
         FactoryReset::request();
     }
 
-    // 1. Process Car Signals & Serial Simulator
+    // 1. Receive CAN vehicle state and process fallback Serial commands.
     CarSignalService::getInstance().update();
 
     // 2. Background polling on Core 0

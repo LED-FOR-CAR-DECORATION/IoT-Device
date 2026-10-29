@@ -128,3 +128,9 @@ Factory reset xóa tên Bluetooth tùy chỉnh, cấu hình LED, Wi-Fi người 
 Nút **RST/EN** chỉ khởi động lại và giữ dữ liệu. Giữ BOOT trong lúc bật nguồn hoặc bấm RST có thể đưa ESP32 vào chế độ nạp firmware; thao tác factory reset phải thực hiện khi firmware đang chạy.
 
 Yêu cầu reset được lưu trước khi khởi động lại; dữ liệu chỉ được xóa ở đầu lần khởi động kế tiếp, trước khi BLE, Wi-Fi và tác vụ vẽ chạy. Nếu bị mất nguồn giữa chừng, firmware tiếp tục hoàn tất reset ở lần khởi động sau.
+
+## Nhận CAN từ bộ giả lập
+
+Firmware đã hỗ trợ nhận `Kan_sim` ID `0x321` / 500 kbit/s, điều khiển xi-nhan,
+hazard, phanh, lùi và dừng. Phía LED dùng **TX GPIO21 / RX GPIO22**; xem
+[đấu nối và chạy CAN](docs/CAN.md). Đây là giao thức test, chưa phải CAN Hyundai i10.
