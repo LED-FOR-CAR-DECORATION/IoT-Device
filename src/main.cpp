@@ -45,6 +45,7 @@ void ledTask(void* parameter) {
 }
 
 void setup() {
+    OtaManager::getInstance().earlyBoot();
     // 1. Initialize Logger
     Logger::init(115200);
     LOG_I(TAG, "=== %s v%s Starting ===", DEVICE_NAME, FIRMWARE_VERSION);

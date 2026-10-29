@@ -11,7 +11,9 @@
 
 // Device Identity
 #define DEVICE_NAME             "CarLED-Ambient"
-#define FIRMWARE_VERSION        "1.0.0"
+#ifndef FIRMWARE_VERSION
+#define FIRMWARE_VERSION        "1.1.0"
+#endif
 #define HARDWARE_REV            "ESP32-V1"
 
 // Matrix Hardware Specifications

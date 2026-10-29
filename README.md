@@ -1,5 +1,12 @@
 # Smart Car Ambient LED Lighting - IoT Device Firmware
 
+## Cập nhật firmware từ điện thoại (mainflow 4)
+
+Điện thoại gửi lệnh qua BLE; ESP32 tải firmware qua HTTPS bằng Wi-Fi/hotspot.
+Xem [hướng dẫn OTA đầy đủ](../backend/docs/firmware-ota.md) cho cấu hình CA/backend,
+nạp bootstrap qua USB, đăng ký chủ thiết bị và kiểm thử. `ArduinoOTA` cũ đã được
+thay bằng luồng tải có phiên cấp quyền; không còn mở dịch vụ nạp ArduinoOTA LAN.
+
 Repository chứa mã nguồn Firmware cho hệ thống điều khiển LED trang trí nội thất ô tô thông minh (Car Ambient Lighting). Dự án chạy trên nền tảng vi điều khiển **ESP32**, xây dựng với công cụ quản lý dự án **PlatformIO** theo chuẩn kiến trúc hướng đối tượng & module hoá phân tầng.
 
 ---

@@ -1,5 +1,6 @@
 #include "WifiManager.h"
 #include "BleManager.h"
+#include "OtaManager.h"
 #include "config.h"
 #include "core/StateManager.h"
 #include "effects/EffectManager.h"
@@ -356,6 +357,7 @@ void WifiManager::handleRoot() {
 }
 
 void WifiManager::handleApiUpload() {
+    if (OtaManager::getInstance().isBusy()) { server.send(409,"application/json","{\"error\":\"ota_busy\"}"); return; }
     if (!server.hasArg("plain")) {
         server.send(400, "application/json", "{\"error\":\"missing_body\"}");
         return;
@@ -442,6 +444,7 @@ void WifiManager::handleApiCommand() {
 }
 
 void WifiManager::handleApiWifi() {
+    if (OtaManager::getInstance().isBusy()) { server.send(409,"application/json","{\"error\":\"ota_busy\"}"); return; }
     if (!server.hasArg("plain")) {
         server.send(400, "application/json", "{\"error\":\"missing_body\"}");
         return;

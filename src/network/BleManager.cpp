@@ -4,6 +4,7 @@
 #include "core/StateManager.h"
 #include "effects/EffectManager.h"
 #include "network/WifiManager.h"
+#include "network/OtaManager.h"
 #include "storage/StorageManager.h"
 #include "utils/ColorUtils.h"
 #include "utils/Logger.h"
@@ -85,6 +86,7 @@ void BleManager::configureAdvertising(bool fast) {
 }
 
 void BleManager::init() {
+    notificationMutex = xSemaphoreCreateMutex();
     Preferences identity;
     deviceName = DEVICE_NAME;
     if (identity.begin("ble_identity", true)) {
@@ -129,6 +131,7 @@ void BleManager::init() {
 
 void BleManager::handleIncomingCommand(const uint8_t* data, size_t length) {
     if (data == nullptr || length == 0) return;
+    if (OtaManager::getInstance().isBusy() && data[0] == PROTOCOL_START_BYTE) return;
 
     // Check if packet matches binary protocol frame: [0xAA, ..., 0x55]
     if (length >= 6 && data[0] == PROTOCOL_START_BYTE && data[length - 1] == PROTOCOL_END_BYTE) {
@@ -532,7 +535,7 @@ void BleManager::appendAndProcessJsonChunk(const uint8_t* data, size_t length) {
 }
 
 void BleManager::handleJsonPayload(const std::string& commandStr) {
-    LOG_D(TAG, "BLE JSON payload: %s", commandStr.c_str());
+    // Payloads contain credentials and OTA capabilities; never log them.
 
     JsonDocument doc;
     DeserializationError error = deserializeJson(doc, commandStr);
@@ -542,6 +545,13 @@ void BleManager::handleJsonPayload(const std::string& commandStr) {
     }
 
     const String command = doc["command"] | "";
+    if (command == "get_ota_info") {
+        OtaManager::getInstance().sendInfo(doc["request_id"] | ""); return;
+    }
+    if (command == "ota_start") {
+        OtaManager::getInstance().start(doc["token"] | "",doc["request_id"] | ""); return;
+    }
+    if (OtaManager::getInstance().isBusy()) return;
     if (command == "rename_device" || command == "get_device_info") {
         JsonDocument reply;
         reply["request_id"] = doc["request_id"] | "";
@@ -680,13 +690,18 @@ void BleManager::handleJsonPayload(const std::string& commandStr) {
 }
 
 void BleManager::sendStatusNotification(const String& jsonStatus) {
-    if (deviceConnected && pStatusCharacteristic) {
-        pStatusCharacteristic->setValue(
-            reinterpret_cast<const uint8_t*>(jsonStatus.c_str()),
-            jsonStatus.length()
-        );
-        pStatusCharacteristic->notify();
+    if (!notificationMutex || xSemaphoreTake(notificationMutex,pdMS_TO_TICKS(100))!=pdTRUE) return;
+    if (deviceConnected && pStatusCharacteristic && pServer) {
+        size_t mtu=pServer->getPeerMTU(currentConnHandle);
+        size_t chunk=mtu>3?mtu-3:20;
+        pStatusCharacteristic->setValue(reinterpret_cast<const uint8_t*>(jsonStatus.c_str()),jsonStatus.length());
+        for(size_t offset=0;offset<jsonStatus.length() && deviceConnected;offset+=chunk) {
+            pStatusCharacteristic->notify(reinterpret_cast<const uint8_t*>(jsonStatus.c_str())+offset,
+                std::min(chunk,jsonStatus.length()-offset));
+            if(jsonStatus.length()>chunk) vTaskDelay(pdMS_TO_TICKS(8));
+        }
     }
+    xSemaphoreGive(notificationMutex);
 }
 
 bool BleManager::isConnected() const {

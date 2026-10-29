@@ -18,6 +18,7 @@ compile_commands.json
 
 # Credentials and secrets
 include/secrets.h
+include/ota_config.h
 src/secrets.h
 .env
 .env.*

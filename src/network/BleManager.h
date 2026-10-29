@@ -49,6 +49,7 @@ private:
     NimBLEServer* pServer;
     NimBLECharacteristic* pControlCharacteristic;
     NimBLECharacteristic* pStatusCharacteristic;
+    SemaphoreHandle_t notificationMutex = nullptr;
     String deviceName;
     bool deviceConnected;
     unsigned long advertisingStartTime;
